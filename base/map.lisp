@@ -33,7 +33,7 @@
                       :initial-contents normalized-list)))
 
 ;;; File format is (byte object-type) for now. So one byte is one object.
-(defun load-map-from-file (path)
+(defun load-map-from-file (path code->object-dict)
   "Loads map from binary file and use raw bytes as map objects."
   (with-open-file (file-stream path :element-type 'unsigned-byte)
     (list->array
@@ -45,5 +45,9 @@
                 do (push (reverse buffer) result-accamulator)
                    (setf buffer nil)
               else
-                do (push byte buffer)
+                do (push (funcall (cdr (assoc byte code->object-dict))) buffer)
               finally (return result-accamulator))))))
+
+(defun check-passability (map x y)
+  "Checks map cell passability."
+  (object-passable (aref map x y)))
