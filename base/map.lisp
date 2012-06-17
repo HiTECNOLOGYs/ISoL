@@ -51,3 +51,15 @@
 (defun check-passability (map x y)
   "Checks map cell passability."
   (object-passable (aref map x y)))
+
+(defun render-map (map)
+  "Transforms map in human-readable and printable form."
+  (destructuring-bind (size-x size-y) (array-dimensions map)
+    (loop for x from 0 to (1- size-x)
+          with buffer = nil
+          with rendered = nil
+          do (loop for y from 0 to (1- size-y)
+                   do (push (object-display-symbol (aref map x y)) buffer))
+             (push (reverse buffer) rendered)
+             (setf buffer nil)
+          finally (return (reverse rendered)))))
