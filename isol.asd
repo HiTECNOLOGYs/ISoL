@@ -1,10 +1,3 @@
-;;;; isol.asd
-;;;;
-;;;; Author: Mark Fedurin <hitecnologys@gmail.com>.
-;;;; Description: Here is system definition.
-
-(asdf:operate 'asdf:load-op :lispbuilder-sdl)
-
 (defpackage #:isol-system
   (:use #:cl
         #:asdf))
@@ -12,16 +5,18 @@
 (in-package #:isol-system)
 
 (defsystem "isol"
-  :description "Just another rogurelike RPG."
+  :description "Just another roguelike RPG."
   :version "0.1"
   :author "Mark Fedurin <hitecnologys@gmail.com>"
-  :license "GPLv3"
-  :components
-  ((:module "Base"
-      :serial t
-      :components
-      (:file "objects")
-      (:file "map")
-      (:file "player")
-      (:file "game")
-      (:file "main"))))
+  :license "GPL v3"
+  :defsystem-depends-on (cl-ncurses)
+  :components ((:module src
+                        :components ((:module base
+                                              :serial t
+                                              :components ((:file "packages")
+                                                           (:file "utilities")
+                                                           (:file "objects")
+                                                           (:file "map")
+                                                           (:file "player")
+                                                           (:file "game")
+                                                           (:file "main")))))))
