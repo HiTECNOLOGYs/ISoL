@@ -1,8 +1,8 @@
 (in-package #:isol.player)
 
 (defstruct Player
-  (position '(0 0)))
-
+  (position '(0 0))
+  (character #\@))
 
 (declaim (inline player-x))
 (defun player-x (player)

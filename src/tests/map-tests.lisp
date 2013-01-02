@@ -17,14 +17,13 @@
     (check-cell array  1 1  5)
     (check-cell array  2 1  6)))
 
-(test (test-map-loading :depends-on test-list-to-array-conversion)
-  (let* ((objects-list (load-objects-list-from-file "res/test-objects-list.isol"))
-         (map (load-map-from-file "res/test-map.isol" objects-list)))
+(test (test-map-loading :depends-on (and test-list-to-array-conversion
+                                         test-object-types-list-loading))
+  (with-test-map (map)
     (is       (check-passability map 1 0))
     (is-false (check-passability map 0 0))))
 
 (test (test-map-rendering :depends-on test-map-loading)
-  (let* ((objects-list (load-objects-list-from-file "res/test-objects-list.isol"))
-         (rendered-map (render-map (load-map-from-file "res/test-map.isol" objects-list))))
+  (with-test-rendered-map (rendered-map)
     (is (eq (first (first rendered-map)) #\O))
     (is (eq (second (first rendered-map)) #\P))))

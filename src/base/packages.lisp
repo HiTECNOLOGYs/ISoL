@@ -4,7 +4,9 @@
            #:curry
            #:stream->list
            #:doarray
-           #:2d-array->list))
+           #:2d-array->list
+           #:compose
+           #:list->string))
 
 (defpackage #:isol.objects
   (:use #:cl
@@ -31,6 +33,18 @@
         #:isol.map
         #:isol.objects
         #:isol.utilities))
+
+(defpackage #:isol.graphics
+  (:use #:cl
+        #:isol.player
+        #:isol.map
+        #:isol.objects
+        #:isol.utilities)
+  (:export #:initialize-screen
+           #:deinitialize-screen
+           #:redraw-screen
+           #:print-rendered-map
+           #:print-map))
 
 (defpackage #:isol.game
   (:use #:cl

@@ -11,18 +11,12 @@
   :defsystem-depends-on (isol fiveam)
   :components ((:module src
                         :components ((:module tests
+                                              :serial t
                                               :components ((:file "packages")
-                                                           (:file "suites"
-                                                                  :depends-on ("packages"))
-                                                           (:file "objects-tests"
-                                                                  :depends-on ("packages"
-                                                                               "suites"))
-                                                           (:file "map-tests"
-                                                                  :depends-on ("packages"
-                                                                               "suites"))
-                                                           (:file "player-tests"
-                                                                  :depends-on ("packages"
-                                                                               "suites"))
-                                                           (:file "game-tests"
-                                                                  :depends-on ("packages"
-                                                                               "suites"))))))))
+                                                           (:file "suites")
+                                                           (:file "utilities")
+                                                           (:file "objects-tests")
+                                                           (:file "map-tests")
+                                                           (:file "player-tests")
+                                                           (:file "graphics-tests")
+                                                           (:file "game-tests")))))))

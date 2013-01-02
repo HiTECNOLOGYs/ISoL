@@ -18,5 +18,6 @@
                                                            (:file "objects")
                                                            (:file "map")
                                                            (:file "player")
+                                                           (:file "graphics")
                                                            (:file "game")
                                                            (:file "main")))))))
