@@ -3,7 +3,8 @@
 (defmacro when-let ((var form) &body body)
   "Binds predicate result to variable."
   `(let ((,var ,form))
-     ,@body))
+     (when ,var
+       ,@body)))
 
 (defun curry (function &rest arguments)
   #'(lambda (&rest more-arguments)
