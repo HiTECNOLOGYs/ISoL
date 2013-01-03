@@ -17,6 +17,6 @@
 (defun move-player (player map x y)
   "Moves player relative and checks map cell to passability."
   (destructuring-bind (player-x player-y) (player-position player)
-      (when (check-passability map (+ player-x x) (+ player-y y))
-        (incf player-x x)
-        (incf player-y y))))
+    (when (check-passability map (+ player-x x) (+ player-y y))
+      (incf player-x x)
+      (incf player-y y))))
