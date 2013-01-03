@@ -32,7 +32,20 @@
   (:use #:cl
         #:isol.map
         #:isol.objects
-        #:isol.utilities))
+        #:isol.utilities)
+  (:export #:make-player
+           #:player-position
+           #:player-x
+           #:player-y
+           #:*player-actions*
+           #:*keyboard-hooks*
+           #:add-action
+           #:defaction
+           #:bind-action-to-key
+           #:defbinding
+           #:run-action
+           #:process-keys)
+  )
 
 (defpackage #:isol.graphics
   (:use #:cl
