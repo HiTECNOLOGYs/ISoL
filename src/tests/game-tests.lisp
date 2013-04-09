@@ -1,1 +1,2 @@
-(in-package #:isol.tests/game)
+(in-package #:isol)
+(in-suite game-tests)

@@ -1,4 +1,4 @@
-(in-package #:isol.game)
+(in-package #:isol)
 
 (defstruct Game
   (player nil)

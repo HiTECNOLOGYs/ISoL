@@ -1,4 +1,4 @@
-(in-package #:isol.map)
+(in-package #:isol)
 
 (defun find-list-size (list)
   "Calculates list size."

@@ -1,4 +1,4 @@
-(in-package #:isol.tests/map)
+(in-package #:isol)
 (in-suite map-tests)
 
 (test test-list-size-searching

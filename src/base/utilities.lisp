@@ -1,4 +1,4 @@
-(in-package #:isol.utilities)
+(in-package #:isol)
 
 (defmacro when-let ((var form) &body body)
   "Binds predicate result to variable."

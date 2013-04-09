@@ -1,4 +1,4 @@
-(in-package #:isol.objects)
+(in-package #:isol)
 
 (defstruct Object
   (display-character #\O)

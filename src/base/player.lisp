@@ -1,4 +1,4 @@
-(in-package #:isol.player)
+(in-package #:isol)
 
 (defstruct Player
   (position '(0 0))

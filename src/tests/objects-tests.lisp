@@ -1,4 +1,4 @@
-(in-package #:isol.tests/objects)
+(in-package #:isol)
 (in-suite objects-tests)
 
 (test test-object-type-parsing

@@ -1,4 +1,4 @@
-(in-package #:isol.tests/utilities)
+(in-package #:isol)
 
 (defparameter *test-objects-list-path* (make-pathname :directory '(:relative "res")
                                                       :name "test-objects-list"

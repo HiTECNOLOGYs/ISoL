@@ -1,4 +1,4 @@
-(in-package #:isol.graphics)
+(in-package #:isol)
 
 (defun initialize-screen ()
   "Initializes ncurses and sets some parameters."

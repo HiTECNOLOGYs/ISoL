@@ -1,4 +1,4 @@
-(in-package #:isol.tests/player)
+(in-package #:isol)
 (in-suite player-tests)
 
 (defun gen-integer (&key (max (1+ most-positive-fixnum)) (min (1- most-negative-fixnum)))
