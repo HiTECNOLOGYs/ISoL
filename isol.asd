@@ -31,14 +31,18 @@
                         :serial t
                         :components ((:file "packages")
                                      (:module tests
-                                              :serial t
                                               :components ((:file "suites")
                                                            (:file "utilities")
-                                                           (:file "objects-tests")
-                                                           (:file "map-tests")
-                                                           (:file "player-tests")
-                                                           (:file "graphics-tests")
-                                                           (:file "game-tests")))))))
+                                                           (:file "objects-tests"
+                                                                  :depends-on ("utilities" "suites"))
+                                                           (:file "map-tests"
+                                                                  :depends-on ("utilities" "suites"))
+                                                           (:file "player-tests"
+                                                                  :depends-on ("utilities" "suites"))
+                                                           (:file "graphics-tests"
+                                                                  :depends-on ("utilities" "suites"))
+                                                           (:file "game-tests"
+                                                                  :depends-on ("utilities" "suites"))))))))
 
 (defmethod perform ((op test-op) (c (eql (find-system :isol))))
   (operate 'load-op :isol)
