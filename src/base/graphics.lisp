@@ -24,7 +24,7 @@
   (print-rendered-map (render-map map)))
 
 (defun print-player (player)
-  "Prints player on his(hey?) position on the map for now.
+  "Prints player on his(her?) position on the map for now.
 Will print some other info in the future, I think."
   (cl-ncurses:mvaddch (player-y player)
                       (player-x player)

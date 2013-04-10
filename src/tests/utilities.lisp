@@ -25,6 +25,6 @@
 
 (defmacro with-test-screen (&body body)
   `(unwind-protect
-          (progn (initialize-screen)
-                 ,@body)
-          (deinitialize-screen)))
+        (progn (initialize-screen)
+               ,@body)
+     (deinitialize-screen)))
