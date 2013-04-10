@@ -15,9 +15,14 @@
   "Refreshes screen."
   (cl-ncurses:refresh))
 
+(defun printw-newline (string)
+  (cl-ncurses:printw (concatenate 'string
+                                  string
+                                  (coerce (list #\Newline) 'string))))
+
 (defun print-rendered-map (rendered-map)
   "Prints already rendered map."
-  (mapcar (compose #'cl-ncurses:printw #'list->string) rendered-map))
+  (mapcar (compose #'printw-newline #'list->string) rendered-map))
 
 (defun print-map (map)
   "Renders map and prints it."
