@@ -7,10 +7,12 @@
        ,@body)))
 
 (defun curry (function &rest arguments)
+  "Partially applies arguments to function."
   #'(lambda (&rest more-arguments)
       (apply function (append arguments more-arguments))))
 
 (defun compose (function-1 function-2)
+  "Makes lambda of two function where `function-2' result is passed to `function-1'."
   #'(lambda (&rest arguments)
       (funcall function-1 (apply function-2 arguments))))
 
@@ -23,15 +25,19 @@
           :collecting result))
 
 (defun 2d-array->list (array)
+  "Converts 2 dimensional array to list of lists whcih are rows of array."
   (destructuring-bind (size-y size-x) (array-dimensions array)
     (loop for i below size-y
         collect (loop for j below size-x
                       collect (aref array i j)))))
 
 (defun list->string (list)
+  "Converts list of characters to string."
   (coerce list 'string))
 
 (defmacro doarray ((x-var y-var array) &body body)
+  "Iterates through `array' from top left angle to down right angle.
+Binds `x-var' to current x position and `y-var' to current y position."
   `(destructuring-bind (x-size y-size) (array-dimensions ,array)
      (dotimes (,y-var y-size)
        (dotimes (,x-var x-size)

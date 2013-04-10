@@ -5,6 +5,8 @@
   (passable nil))
 
 (defun symbol-object (dictionary symbol)
+  "Retuns object for some specific `symbol'.
+Object is created by calling function associated with `symbol' from `dictionary'."
   (funcall (cdr (assoc symbol dictionary))))
 
 (defun parse-object-type (line)

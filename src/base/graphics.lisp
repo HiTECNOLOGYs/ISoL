@@ -9,6 +9,7 @@
   (cl-ncurses:endwin))
 
 (defun clear-screen ()
+  "Completely clears screen."
   (cl-ncurses:clear))
 
 (defun redraw-screen ()
@@ -16,6 +17,7 @@
   (cl-ncurses:refresh))
 
 (defun printw-newline (string)
+  "Prints text to ncurses with new line at the end."
   (cl-ncurses:printw (concatenate 'string
                                   string
                                   (coerce (list #\Newline) 'string))))
