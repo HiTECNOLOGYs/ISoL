@@ -1,10 +1,14 @@
 (in-package #:isol)
 
+(defmacro if-let ((var form) true &optional not-true)
+  `(let ((,var ,form))
+     (if ,var
+       not-true)))
+
 (defmacro when-let ((var form) &body body)
   "Binds predicate result to variable."
-  `(let ((,var ,form))
-     (when ,var
-       ,@body)))
+  `(if-let (,var ,form)
+     (progn ,@body)))
 
 (defun curry (function &rest arguments)
   "Partially applies arguments to function."
