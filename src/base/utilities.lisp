@@ -1,9 +1,10 @@
 (in-package #:isol)
 
-(defmacro if-let ((var form) true &optional not-true)
+(defmacro if-let ((var form) true-clause &optional not-true-clause)
   `(let ((,var ,form))
      (if ,var
-       not-true)))
+       ,true-clause
+       ,not-true-clause)))
 
 (defmacro when-let ((var form) &body body)
   "Binds predicate result to variable."
