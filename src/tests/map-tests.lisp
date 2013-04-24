@@ -1,29 +1,27 @@
 (in-package #:isol)
 (in-suite map-tests)
 
-(test test-list-size-searching
-  (let ((list-size (find-list-size '((1 2 3) (4 5 6)))))
-    (is (= (first list-size)
-           2))
-    (is (= (second list-size))
-        3)))
-
 (defmacro check-cell (array x y value)
   `(is (eq (aref ,array ,y ,x) ,value)))
 
-(test (test-list-to-array-conversion :depends-on test-list-size-searching)
-  (let ((array (list->array '((1 2 3) (4 5 6)))))
-    (check-cell array  0 0  1)
-    (check-cell array  1 1  5)
-    (check-cell array  2 1  6)))
+(test test-symbol-conversion
+  (let ((instance (get-object-instance-from-symbol 'wall)))
+    (is (equal (name instance)
+               "Wall"))
+    (is (equal (description instance)
+               "Just rusty old stone wall."))
+    (is (= (hp instance)
+               10000))
+    (is (eql (material instance)
+             'stone))))
 
-(test (test-map-loading :depends-on (and test-list-to-array-conversion
-                                         test-object-types-list-loading))
+(test (test-map-loading :depends-on test-symbol-conversion)
   (with-test-map (map)
-    (is       (check-passability map 1 0))
-    (is-false (check-passability map 0 0))))
+    (is       (map-cell-passable-p map 1 1))
+    (is-false (map-cell-passable-p map 0 0))))
 
 (test (test-map-rendering :depends-on test-map-loading)
   (with-test-rendered-map (rendered-map)
-    (is (eq (first (first rendered-map)) #\O))
-    (is (eq (second (first rendered-map)) #\P))))
+    (is (eq (first (first rendered-map)) #\#))
+    (is (eq (second (second rendered-map)) #\.))))
+
