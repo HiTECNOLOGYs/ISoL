@@ -30,9 +30,8 @@
   "Renders map and prints it."
   (print-rendered-map (render-map map)))
 
-(defun print-player (player)
-  "Prints player on his(her?) position on the map for now.
-Will print some other info in the future, I think."
-  (cl-ncurses:mvaddch (player-y player)
-                      (player-x player)
-                      (char-int (player-character player))))
+(defmethod print-object ((player Player) (stream (eql '*game-window*)))
+  (destructuring-bind (player-x player-y) (location player)
+    (cl-ncurses:mvaddch player-y
+                        player-x
+                        (char-int (display-character player)))))
