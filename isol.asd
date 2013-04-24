@@ -8,7 +8,7 @@
   :description "Just another roguelike RPG."
   :author "Mark Fedurin <hitecnologys@gmail.com>"
   :license "GPL v3"
-  :defsystem-depends-on (#:fiveam #:cl-ncurses)
+  :defsystem-depends-on (:fiveam :cl-ncurses :cl-store)
   :components ((:module src
                         :serial t
                         :components ((:file "packages")
@@ -17,6 +17,7 @@
                                               :components ((:file "utilities")
                                                            (:file "objects")
                                                            (:file "map")
+                                                           (:file "keyboard")
                                                            (:file "player")
                                                            (:file "graphics")
                                                            (:file "game")
