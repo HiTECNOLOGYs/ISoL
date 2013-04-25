@@ -1,12 +1,27 @@
 (in-package #:isol)
 
-(defun initialize-screen ()
+(defparameter *screen-initialized?* nil)
+
+(defun initialize-screen (&rest arguments)
   "Initializes ncurses and sets some parameters."
-  (cl-ncurses:initscr))
+  (unless *screen-initialized?*
+    (cl-ncurses:initscr)
+    (setf *screen-initialized?* t))
+  (dolist (argument arguments)
+    (case argument
+      (:noecho (cl-ncurses:noecho))
+      (:raw (cl-ncurses:raw))
+      (:nocbreak (cl-ncurses:nocbreak))
+      (:noraw (cl-ncurses:noraw))
+      (:echo (cl-ncurses:echo))))
+  *screen-initialized?*)
 
 (defun deinitialize-screen ()
   "Deinitializes ncurses."
-  (cl-ncurses:endwin))
+  (when *screen-initialized?*
+    (cl-ncurses:endwin)
+    (setf *screen-initialized?* nil))
+  *screen-initialized?*)
 
 (defun clear-screen ()
   "Completely clears screen."
@@ -30,8 +45,15 @@
   "Renders map and prints it."
   (print-rendered-map (render-map map)))
 
-(defmethod print-object ((player Player) (stream (eql '*game-window*)))
+(defmethod print-object ((player Player) (stream (eql :game-window)))
   (destructuring-bind (player-x player-y) (location player)
     (cl-ncurses:mvaddch player-y
                         player-x
                         (char-int (display-character player)))))
+
+
+(defmacro with-screen ((&body arguments) &body body)
+  `(unwind-protect
+        (progn (initialize-screen ,@arguments)
+               ,@body)
+     (deinitialize-screen)))
