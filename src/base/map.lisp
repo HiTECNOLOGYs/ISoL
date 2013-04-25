@@ -36,6 +36,7 @@
           (2d-array->list map)))
 
 (defun map-cell-passable-p (map x y)
+  "Checks if some map place is passable for player."
   (passable-p (aref map y x)))
 
 
