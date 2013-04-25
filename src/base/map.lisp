@@ -42,7 +42,7 @@
 (defparameter *objects-map-reader-symbols* nil)
 
 (defmacro define-object-map-symbol (symbol class &body default-initargs)
-  `(push (cons ',symbol
+  `(push (cons ,symbol
                #'(lambda (&rest initargs)
                    (if initargs
                      (apply #'make-instance ',class
@@ -54,14 +54,14 @@
   (when-let (function (cdr (assoc symbol *objects-map-reader-symbols*)))
     (apply function initargs)))
 
-(define-object-map-symbol Wall Map-Element
+(define-object-map-symbol :Wall Map-Element
   :name "Wall"
   :description "Just rusty old stone wall."
   :display-character #\#
   :hp 10000
   :material 'stone)
 
-(define-object-map-symbol Ground Map-Element
+(define-object-map-symbol :Ground Map-Element
   :name "Ground"
   :passable? t
   :description "Nothing in here."
