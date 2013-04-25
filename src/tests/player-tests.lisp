@@ -16,5 +16,7 @@
   (let ((some-random-integer (gen-integer))
         (some-random-char (code-char (gen-integer :min 20 :max 128))))
     (define-key-processor some-random-char (some-number)
+      (declare (ignore player map))
       (is (= some-number some-random-integer)))
-    (process-key some-random-char some-random-integer)))
+    (process-key some-random-char nil nil some-random-integer)
+    (clear-key-bindings)))
