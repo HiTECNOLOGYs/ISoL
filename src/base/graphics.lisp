@@ -58,3 +58,28 @@
         (progn (initialize-screen ,@arguments)
                ,@body)
      (deinitialize-screen)))
+
+(defun get-attribute-name-from-keyword (attribute)
+  (if (not (keywordp attribute))
+    attribute
+    (case attribute
+      (:normal cl-ncurses:a_normal)
+      (:standout cl-ncurses:a_standout)
+      (:underline cl-ncurses:a_underline)
+      (:reverse cl-ncurses:a_reverse)
+      (:blink cl-ncurses:a_blink)
+      (:dim cl-ncurses:a_dim)
+      (:bold cl-ncurses:a_bold)
+      (:protect cl-ncurses:a_protect)
+      (:invis cl-ncurses:a_invis)
+      (:altcharset cl-ncurses:a_altcharset))))
+
+(defmacro with-attributes ((&body attributes) &body body)
+  `(unwind-protect
+        (progn (cl-ncurses:attron ,(apply #'logior
+                                          (loop for attribute in attributes
+                                                collecting (get-attribute-name-from-keyword attribute))))
+               ,@body)
+     (progn (cl-ncurses:attroff ,(apply #'logior
+                                        (loop for attribute in attributes
+                                              collecting (get-attribute-name-from-keyword attribute)))))))
