@@ -86,9 +86,17 @@
   :material 'stone)
 
 (define-object-map-symbol :Gun Weapon
-  :name "Just usual revolver."
+  :name "Revolver"
   :description "A bit rusty and dirty old revolver with no ammo."
   :damage-value 15
   :kind (list :gun :bullets-9mm)
   :size 2
   :weight 150)
+
+(define-object-map-symbol :Rock Map-Object
+  :name "Rock"
+  :description "A hunge gray rock lying on the floor."
+  :movable? t
+  :display-character #\*
+  :hp :1000
+  :material 'stone)
