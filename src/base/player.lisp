@@ -3,6 +3,18 @@
 (defclass Player (Creature) ()
   (:documentation "Player character."))
 
+(defun player-x (player)
+  (first (location player)))
+
+(defun (setf player-x) (new-value player)
+  (setf (first (location player)) new-value))
+
+(defun player-y (player)
+  (second (location player)))
+
+(defun (setf player-y) (new-value player)
+  (setf (second (location player)) new-value))
+
 (defmethod move-creature ((player Player) map x y)
   "Moves player relative and checks map cell to passability."
   (destructuring-bind (player-x player-y) (location player)

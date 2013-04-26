@@ -39,6 +39,21 @@
   "Checks if some map place is passable for player."
   (every #'passable-p (aref map y x)))
 
+(defun get-map-cell-value (map x y)
+  (aref map y x))
+
+(defun (setf get-map-cell-value) (new-value map x y)
+  (setf (aref map y x) new-value))
+
+(defun place-object (map x y object)
+  (push object (get-map-cell-value map x y)))
+
+(defun pick-object (map x y)
+  (pop (get-map-cell-value map x y)))
+
+(defun get-map-cell-top (map x y)
+  (first (get-map-cell-value map x y)))
+
 
 (defparameter *objects-map-reader-symbols* nil)
 
