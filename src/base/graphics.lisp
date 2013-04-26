@@ -9,12 +9,14 @@
     (setf *screen-initialized?* t))
   (dolist (argument arguments)
     (case argument
+      (:echo (cl-ncurses:echo))
       (:noecho (cl-ncurses:noecho))
       (:raw (cl-ncurses:raw))
-      (:nocbreak (cl-ncurses:nocbreak))
-      (:nocursor (cl-ncurses:curs-set 0))
       (:noraw (cl-ncurses:noraw))
-      (:echo (cl-ncurses:echo))))
+      (:cbreak (cl-ncurses:cbreak))
+      (:nocbreak (cl-ncurses:nocbreak))
+      (:cursor (cl-ncurses:curs-set 1))
+      (:nocursor (cl-ncurses:curs-set 0))))
   *screen-initialized?*)
 
 (defun deinitialize-screen ()
