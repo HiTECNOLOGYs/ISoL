@@ -84,3 +84,11 @@
   :display-character #\.
   :hp :100000
   :material 'stone)
+
+(define-object-map-symbol :Gun Weapon
+  :name "Just usual revolver."
+  :description "A bit rusty and dirty old revolver with no ammo."
+  :damage-value 15
+  :kind (list :gun :bullets-9mm)
+  :size 2
+  :weight 150)
