@@ -30,12 +30,12 @@
         (load-map-from-file (make-pathname :directory '(:relative "res")
                                            :name "test-map"
                                            :type "isol")))
- (with-screen (:noecho)
-   (catch 'end-game
-     (handler-case (loop (game-step *game*)
-                         (sleep 1/100))
-       (exit-game ()
-         (throw 'end-game (values)))
-       (sb-sys:interactive-interrupt ()
-         (throw 'end-game (values)))))))
+  (with-screen (:noecho :nocursor)
+    (catch 'end-game
+      (handler-case (loop (game-step *game*)
+                       (sleep 1/100))
+        (exit-game ()
+          (throw 'end-game (values)))
+        (sb-sys:interactive-interrupt ()
+          (throw 'end-game (values)))))))
          
