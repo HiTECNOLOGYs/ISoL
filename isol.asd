@@ -16,6 +16,7 @@
                                               :serial t
                                               :components ((:file "utilities")
                                                            (:file "objects")
+                                                           (:file "items")
                                                            (:file "map")
                                                            (:file "keyboard")
                                                            (:file "player")
