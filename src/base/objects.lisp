@@ -41,12 +41,16 @@
           :initform 0
           :accessor level)
    (attributes :initarg :attributes
-               :accessor attributes)
+               :accessor attributes
+               :initform nil)
    (inventory :initarg :inventory
+              :initform nil
               :accessor inventory)
    (hands :initarg :hands
+          :initform nil
           :accessor hands)
    (clothes :initarg clothes
+            :initform nil
             :accessor clothes))
   (:documentation "Living creature is object too of course."))
 
