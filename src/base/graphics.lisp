@@ -12,6 +12,7 @@
       (:noecho (cl-ncurses:noecho))
       (:raw (cl-ncurses:raw))
       (:nocbreak (cl-ncurses:nocbreak))
+      (:nocursor (cl-ncurses:curs-set 0))
       (:noraw (cl-ncurses:noraw))
       (:echo (cl-ncurses:echo))))
   *screen-initialized?*)
