@@ -28,16 +28,16 @@
   (with-open-file (file-stream path)
     (list->array
       (stream->list file-stream
-                    (curry #'mapcar #'get-object-instance-from-symbol)))))
+                    (curry #'mapcar (compose #'list #'get-object-instance-from-symbol))))))
 
 (defun render-map (map)
   "Transforms map in human-readable and printable form."
-  (mapcar (curry #'mapcar #'display-character)
+  (mapcar (curry #'mapcar (compose #'display-character #'first))
           (2d-array->list map)))
 
 (defun map-cell-passable-p (map x y)
   "Checks if some map place is passable for player."
-  (passable-p (aref map y x)))
+  (every #'passable-p (aref map y x)))
 
 
 (defparameter *objects-map-reader-symbols* nil)
