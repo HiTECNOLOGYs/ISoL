@@ -30,7 +30,7 @@
         (load-map-from-file (make-pathname :directory '(:relative "res")
                                            :name "test-map"
                                            :type "isol")))
-  (place-object (game-map *game*) 3 2 (get-object-instance-from-symbol :gun))
+  (push-object (game-map *game*) 3 2 (get-object-instance-from-symbol :gun))
   (with-screen (:noecho :nocursor)
     (catch 'end-game
       (handler-case (loop (game-step *game*)

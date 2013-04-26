@@ -25,7 +25,7 @@
 (defmethod pick-up-object ((player Player) map)
   (destructuring-bind (player-x player-y) (location player)
     (when (takable-p (get-map-cell-top map player-x player-y))
-      (push (pop (get-map-cell-value map player-x player-y))
+      (push (pop-object map player-x player-y)
             (inventory player)))))
 
 (define-key-processor #\j ()

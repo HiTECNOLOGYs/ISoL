@@ -45,10 +45,10 @@
 (defun (setf get-map-cell-value) (new-value map x y)
   (setf (aref map y x) new-value))
 
-(defun place-object (map x y object)
+(defun push-object (map x y object)
   (push object (get-map-cell-value map x y)))
 
-(defun pick-object (map x y)
+(defun pop-object (map x y)
   (pop (get-map-cell-value map x y)))
 
 (defun get-map-cell-top (map x y)
