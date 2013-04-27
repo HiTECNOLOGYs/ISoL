@@ -1,4 +1,4 @@
-(in-package #:isol)
+(in-package :isol)
 
 (defparameter *keys* nil
   "Contains bindings of keys to some actions.")

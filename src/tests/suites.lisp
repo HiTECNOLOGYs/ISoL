@@ -1,4 +1,4 @@
-(in-package #:isol)
+(in-package :isol)
 
 (fiveam:def-suite objects-tests)
 (fiveam:def-suite map-tests)

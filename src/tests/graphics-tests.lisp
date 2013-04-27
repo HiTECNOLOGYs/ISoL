@@ -1,4 +1,4 @@
-(in-package #:isol)
+(in-package :isol)
 (in-suite graphics-tests)
 
 (test test-screen-manipulations

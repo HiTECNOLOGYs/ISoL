@@ -1,4 +1,4 @@
-(in-package #:isol)
+(in-package :isol)
 (in-suite map-tests)
 
 (defmacro check-cell (array x y value)

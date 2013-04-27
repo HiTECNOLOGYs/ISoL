@@ -1,8 +1,8 @@
-(defpackage #:isol.system-definition
-  (:use #:cl
-        #:asdf))
+(defpackage :isol.system-definition
+  (:use :cl
+        :asdf))
 
-(in-package #:isol.system-definition)
+(in-package :isol.system-definition)
 
 (defsystem :isol
   :description "Just another roguelike RPG."
@@ -29,7 +29,7 @@
   :description "Set of unit-tests for ISoL."
   :author "Mark Fedurin <hitecnologys@gmail>"
   :license "GPL v3"
-  :defsystem-depends-on (#:fiveam #:isol)
+  :defsystem-depends-on (:fiveam :isol)
   :components ((:module src
                         :serial t
                         :components ((:file "packages")

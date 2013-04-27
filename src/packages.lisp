@@ -1,4 +1,5 @@
-(defpackage #:isol
+(defpackage :isol
   (:use #:cl
         #:cl-ncurses
-        #:fiveam))
+        #:fiveam)
+  (:export :main))

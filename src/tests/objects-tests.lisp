@@ -1,2 +1,2 @@
-(in-package #:isol)
+(in-package :isol)
 (in-suite objects-tests)

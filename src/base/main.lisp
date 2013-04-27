@@ -1,4 +1,4 @@
-(in-package #:isol)
+(in-package :isol)
 
 (defvar *game* nil
   "Stores current game instance.")

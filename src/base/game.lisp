@@ -1,4 +1,4 @@
-(in-package #:isol)
+(in-package :isol)
 
 (defstruct Game
   map
@@ -36,9 +36,9 @@
     (clear-screen)
     (create-new-window :game-window 0 0 30 30)
     (create-new-window :info-window 30 0 20 30)
-    (redraw-screen)
     (draw-window-box :game-window)
     (draw-window-box :info-window)
+    (redraw-screen)
     (catch 'end-game
       (handler-case (loop (game-step *game*)
                           (sleep 1/100))

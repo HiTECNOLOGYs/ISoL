@@ -1,4 +1,4 @@
-(in-package #:isol)
+(in-package :isol)
 
 (defclass Player (Creature)
   ((hp :initform 100)

@@ -1,4 +1,4 @@
-(in-package #:isol)
+(in-package :isol)
 
 (define-constant +test-map-path+ (make-pathname :directory '(:relative "res")
                                                 :name "test-map"

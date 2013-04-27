@@ -1,4 +1,4 @@
-(in-package #:isol)
+(in-package :isol)
 
 (defmacro if-let ((var form) true-clause &optional not-true-clause)
   `(let ((,var ,form))

@@ -1,4 +1,4 @@
-(in-package #:isol)
+(in-package :isol)
 
 (defparameter *screen-initialized?* nil)
 (defparameter *windows* nil)

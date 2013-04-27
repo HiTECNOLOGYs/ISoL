@@ -1,4 +1,4 @@
-(in-package #:isol)
+(in-package :isol)
 
 (defclass Object ()
   ((name :initarg :name
