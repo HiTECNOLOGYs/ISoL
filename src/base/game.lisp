@@ -1,5 +1,8 @@
 (in-package :isol)
 
+(define-constant +info-window-size+ 20)
+(define-constant +minibuffer-size+ 2)
+
 (defstruct Game
   map
   (player (make-instance 'player :location (list 1 1)))
@@ -29,18 +32,32 @@
                                            :name "test-map"
                                            :type "isol")))
   (push-object (game-map game) 3 2 (get-object-instance-from-symbol :gun))
-  (with-screen (:noecho :nocursor :cbreak)
-    (clear-screen)
-    (create-new-window :game-window 0 0 30 30)
-    (create-new-window :info-window 30 0 20 30)
-    (draw-window-box :game-window)
-    (draw-window-box :info-window)
-    (redraw-screen)
-    (catch 'end-game
-      (handler-case (loop (game-step game)
-                          (sleep 1/100))
-        (exit-game ()
-          (throw 'end-game (values)))
-        (sb-sys:interactive-interrupt ()
-          (throw 'end-game (values)))))))
+  (catch 'end-game
+    (handler-case
+        (with-screen (:noecho :nocursor :cbreak)
+          (clear-screen)
+          (destructuring-bind (x . y) (get-screen-size)
+            (when (or (< x 40) (< y 40))
+              (wprintw-newline nil "To play ISoL you need at least 40 rows and 40 column in your terminal, sorry. To quit press ^C.")
+              (redraw-screen)
+              (loop))
+            (create-new-window :minibuffer
+                               0 (- (1- y) +minibuffer-size+)
+                               (- (1- x) +info-window-size+) (1+ +minibuffer-size+))
+            (create-new-window :game-window
+                               0 0
+                               (- (1- x) +info-window-size+) (- (1- y) +minibuffer-size+))
+            (create-new-window :info-window
+                               (- (1- x) +info-window-size+) 0
+                               +info-window-size+ y))
+          (draw-window-box :minibuffer)
+          (draw-window-box :game-window)
+          (draw-window-box :info-window)
+          (redraw-screen)
+          (loop (game-step game)
+             (sleep 1/100)))
+      (sb-sys:interactive-interrupt ()
+        (throw 'end-game (values)))
+      (exit-game ()
+        (throw 'end-game (values))))))
          
