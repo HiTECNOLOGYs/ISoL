@@ -50,6 +50,12 @@
       (declare (ignore column))
       (cl-ncurses:wmove window-ref (1+ row) (cdr +drawing-offset+)))))
 
+(defun draw-char-at (window char x y)
+  (cl-ncurses:mvwaddch (or (get-window-by-id window) cl-ncurses:*stdscr*)
+                       (+ (cdr +drawing-offset+) y)
+                       (+ (car +drawing-offset+) x)
+                       (char-int char)))
+
 (defun print-rendered-map (rendered-map)
   "Prints already rendered map."
   (mapc (compose (curry #'wprintw-newline :game-window)

@@ -1,6 +1,8 @@
 (in-package #:isol)
 
-(defclass Player (Creature) ()
+(defclass Player (Creature)
+  ((hp :initform 100)
+   (wp :initform 100))
   (:documentation "Player character."))
 
 (defun player-x (player)
@@ -30,10 +32,7 @@
 
 (defmethod print-object ((player Player) (stream (eql :game-window)))
   (destructuring-bind (player-x player-y) (location player)
-    (cl-ncurses:mvwaddch (get-window-by-id :game-window)
-                         (+ (cdr +drawing-offset+) player-y)
-                         (+ (cdr +drawing-offset+) player-x)
-                         (char-int (display-character player)))))
+    (draw-char-at :game-window (display-character player) player-x player-y)))
 
 (define-key-processor #\j ()
   (move-creature player map 0 1))
