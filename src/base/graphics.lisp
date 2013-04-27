@@ -51,6 +51,7 @@
       (cl-ncurses:wmove window-ref (1+ row) (cdr +drawing-offset+)))))
 
 (defun draw-char-at (window char x y)
+  "Sets some position in `window' to `char'."
   (cl-ncurses:mvwaddch (or (get-window-by-id window) cl-ncurses:*stdscr*)
                        (+ (cdr +drawing-offset+) y)
                        (+ (car +drawing-offset+) x)
@@ -67,11 +68,13 @@
   (print-rendered-map (render-map map)))
 
 (defun get-screen-size ()
+  "Returns size of terminal screen."
   (let (rows columns)
     (cl-ncurses:getmaxyx cl-ncurses:*stdscr* rows columns)
     (cons columns rows)))
 
 (defun get-cursor-position (&optional window)
+  "Returns current cursor position in some `window'."
   (let (row column)
     (cl-ncurses:getyx (or (get-window-by-id window) cl-ncurses:*stdscr*)
                       row
@@ -79,24 +82,29 @@
     (cons column row)))
 
 (defun create-new-window (id x-position y-position x-size y-size)
+  "Creates new window with given `id', position and size."
   (push (cons id (cl-ncurses:newwin y-size x-size y-position x-position))
         *windows*))
 
 (defun draw-window-box (id)
+  "Draws box around the window with given `id'."
   (cl-ncurses:box (or (get-window-by-id id) cl-ncurses:*stdscr*)
                   (char-code #\|)
                   (char-code #\-)))
 
 (defun get-window-by-id (id)
+  "Returns window reference for given window `id'."
   (cdr (assoc id *windows*)))
 
 (defmacro with-screen ((&body arguments) &body body)
+  "Gurantee that wrapped code will be executed after successful initialization of screen and that screen will be properly deinitialized after `body' execution."
   `(unwind-protect
         (progn (initialize-screen ,@arguments)
                ,@body)
      (deinitialize-screen)))
 
 (defun get-attribute-name-from-keyword (attribute)
+  "Converts list keyword to ncurses attribute id."
   (if (not (keywordp attribute))
     attribute
     (case attribute
@@ -112,6 +120,7 @@
       (:altcharset cl-ncurses:a_altcharset))))
 
 (defmacro with-attributes ((&body attributes) &body body)
+  "Wrapped code will be executed with given attributes and after `body' execution attributes will be disabled."
   `(unwind-protect
         (progn (cl-ncurses:attron ,(apply #'logior
                                           (loop for attribute in attributes

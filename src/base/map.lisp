@@ -58,6 +58,7 @@
 (defparameter *objects-map-reader-symbols* nil)
 
 (defmacro define-object-map-symbol (symbol class &body default-initargs)
+  "Binds some symbol to lambda which will create object with some values preinitialized instances when called."
   `(push (cons ,symbol
                #'(lambda (&rest initargs)
                    (if initargs
@@ -67,6 +68,7 @@
          *objects-map-reader-symbols*))
 
 (defun get-object-instance-from-symbol (symbol &rest initargs)
+  "Returns instace of object for given `symbol'"
   (when-let (function (cdr (assoc symbol *objects-map-reader-symbols*)))
     (apply function initargs)))
 

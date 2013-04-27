@@ -41,7 +41,7 @@
     (draw-window-box :info-window)
     (catch 'end-game
       (handler-case (loop (game-step *game*)
-                       (sleep 1/100))
+                          (sleep 1/100))
         (exit-game ()
           (throw 'end-game (values)))
         (sb-sys:interactive-interrupt ()
