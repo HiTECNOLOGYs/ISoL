@@ -52,20 +52,13 @@
 
 (defun print-rendered-map (rendered-map)
   "Prints already rendered map."
-  (mapcar (compose (curry #'wprintw-newline :game-window)
-                   #'list->string)
-          rendered-map))
+  (mapc (compose (curry #'wprintw-newline :game-window)
+                 #'list->string)
+        rendered-map))
 
 (defun print-map (map)
   "Renders map and prints it."
   (print-rendered-map (render-map map)))
-
-(defmethod print-object ((player Player) (stream (eql :game-window)))
-  (destructuring-bind (player-x player-y) (location player)
-    (cl-ncurses:mvwaddch (get-window-by-id :game-window)
-                         (+ (cdr +drawing-offset+) player-y)
-                         (+ (cdr +drawing-offset+) player-x)
-                         (char-int (display-character player)))))
 
 (defun get-screen-size ()
   (let (rows columns)

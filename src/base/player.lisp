@@ -28,6 +28,13 @@
       (push (pop-object map player-x player-y)
             (inventory player)))))
 
+(defmethod print-object ((player Player) (stream (eql :game-window)))
+  (destructuring-bind (player-x player-y) (location player)
+    (cl-ncurses:mvwaddch (get-window-by-id :game-window)
+                         (+ (cdr +drawing-offset+) player-y)
+                         (+ (cdr +drawing-offset+) player-x)
+                         (char-int (display-character player)))))
+
 (define-key-processor #\j ()
   (move-creature player map 0 1))
 
