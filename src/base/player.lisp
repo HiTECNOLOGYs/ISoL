@@ -27,7 +27,8 @@
 (defmethod pick-up-object ((player Player) map)
   (destructuring-bind (player-x player-y) (location player)
     (when (takable-p (get-map-cell-top map player-x player-y))
-      (push (pop-object map player-x player-y)
+      (push (cons (length (inventory player))
+                  (pop-object map player-x player-y))
             (inventory player)))))
 
 (defmethod print-object ((player Player) (stream (eql :game-window)))
@@ -41,7 +42,10 @@
                       ""
                       "Inventory:"
                       "---")
-                (mapcar #'name
+                (mapcar #'(lambda (item)
+                            (format nil "[~D] ~A"
+                                    (car item)
+                                    (name (cdr item))))
                         (inventory player)))))
 
 (define-key-processor #\j ()
