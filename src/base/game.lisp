@@ -9,6 +9,8 @@
   (print-map (game-map game))
   (write (game-player game)
          :stream :game-window)
+  (write (game-player game)
+         :stream :info-window)
   (redraw-screen)
   (process-key (wait-for-key)
                (game-player game)

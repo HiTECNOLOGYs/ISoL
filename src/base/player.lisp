@@ -34,6 +34,16 @@
   (destructuring-bind (player-x player-y) (location player)
     (draw-char-at :game-window (display-character player) player-x player-y)))
 
+(defmethod print-object ((player Player) (stream (eql :info-window)))
+  (mapc (curry #'wprintw-newline :info-window)
+        (append (list (format nil "HP: ~D" (hp player))
+                      (format nil "WP: ~D" (wp player))
+                      ""
+                      "Inventory:"
+                      "---")
+                (mapcar #'name
+                        (inventory player)))))
+
 (define-key-processor #\j ()
   (move-creature player map 0 1))
 
