@@ -16,22 +16,19 @@
                (game-player game)
                (game-map game)))
 
-
-(defparameter *game* (make-game))
-
 (define-condition exit-game () ())
 
 (define-key-processor #\q ()
   (declare (ignore player map))
   (error 'exit-game))
 
-(defun run-game ()
+(defun run-game (game)
   "Runs game."
-  (setf (game-map *game*)
+  (setf (game-map game)
         (load-map-from-file (make-pathname :directory '(:relative "res")
                                            :name "test-map"
                                            :type "isol")))
-  (push-object (game-map *game*) 3 2 (get-object-instance-from-symbol :gun))
+  (push-object (game-map game) 3 2 (get-object-instance-from-symbol :gun))
   (with-screen (:noecho :nocursor :cbreak)
     (clear-screen)
     (create-new-window :game-window 0 0 30 30)
@@ -40,7 +37,7 @@
     (draw-window-box :info-window)
     (redraw-screen)
     (catch 'end-game
-      (handler-case (loop (game-step *game*)
+      (handler-case (loop (game-step game)
                           (sleep 1/100))
         (exit-game ()
           (throw 'end-game (values)))

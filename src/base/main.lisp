@@ -1,8 +1,8 @@
 (in-package :isol)
 
-(defvar *game* nil
+(defparameter *game* (make-game)
   "Stores current game instance.")
 
 (defun main ()
   "Start point."
-  nil)
+  (run-game *game*))
