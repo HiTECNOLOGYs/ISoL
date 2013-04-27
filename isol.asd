@@ -12,6 +12,7 @@
   :components ((:module src
                         :serial t
                         :components ((:file "packages")
+                                     (:file "utilities")
                                      (:module base
                                               :serial t
                                               :components ((:file "utilities")

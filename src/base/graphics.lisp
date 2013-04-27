@@ -2,7 +2,7 @@
 
 (defparameter *screen-initialized?* nil)
 (defparameter *windows* nil)
-(defconstant +drawing-offset+ (cons 1 1))
+(define-constant +drawing-offset+ (cons 1 1))
 
 (defun initialize-screen (&rest arguments)
   "Initializes ncurses and sets some parameters."
