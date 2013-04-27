@@ -1,6 +1,8 @@
 (in-package #:isol)
 
 (defparameter *screen-initialized?* nil)
+(defparameter *windows* nil)
+(defconstant +drawing-offset+ (cons 1 1))
 
 (defun initialize-screen (&rest arguments)
   "Initializes ncurses and sets some parameters."
@@ -32,17 +34,27 @@
 
 (defun redraw-screen ()
   "Refreshes screen."
-  (cl-ncurses:refresh))
+  (mapc #'(lambda (window)
+            (cl-ncurses:wmove (cdr window) (car +drawing-offset+) (cdr +drawing-offset+)))
+        *windows*)
+  (cl-ncurses:refresh)
+  (mapc (compose #'cl-ncurses:wrefresh #'cdr)
+        *windows*))
 
-(defun printw-newline (string)
+(defun wprintw-newline (window string)
   "Prints text to ncurses with new line at the end."
-  (cl-ncurses:printw (concatenate 'string
-                                  string
-                                  (coerce (list #\Newline) 'string))))
+  (let ((window-ref (or (get-window-by-id window) cl-ncurses:*stdscr*)))
+    (cl-ncurses:wprintw window-ref
+                        string)
+    (destructuring-bind (column . row) (get-cursor-position window)
+      (declare (ignore column))
+      (cl-ncurses:wmove window-ref (1+ row) (cdr +drawing-offset+)))))
 
 (defun print-rendered-map (rendered-map)
   "Prints already rendered map."
-  (mapcar (compose #'printw-newline #'list->string) rendered-map))
+  (mapcar (compose (curry #'wprintw-newline :game-window)
+                   #'list->string)
+          rendered-map))
 
 (defun print-map (map)
   "Renders map and prints it."
@@ -50,10 +62,34 @@
 
 (defmethod print-object ((player Player) (stream (eql :game-window)))
   (destructuring-bind (player-x player-y) (location player)
-    (cl-ncurses:mvaddch player-y
-                        player-x
-                        (char-int (display-character player)))))
+    (cl-ncurses:mvwaddch (get-window-by-id :game-window)
+                         (+ (cdr +drawing-offset+) player-y)
+                         (+ (cdr +drawing-offset+) player-x)
+                         (char-int (display-character player)))))
 
+(defun get-screen-size ()
+  (let (rows columns)
+    (cl-ncurses:getmaxyx cl-ncurses:*stdscr* rows columns)
+    (cons columns rows)))
+
+(defun get-cursor-position (&optional window)
+  (let (row column)
+    (cl-ncurses:getyx (or (get-window-by-id window) cl-ncurses:*stdscr*)
+                      row
+                      column)
+    (cons column row)))
+
+(defun create-new-window (id x-position y-position x-size y-size)
+  (push (cons id (cl-ncurses:newwin y-size x-size y-position x-position))
+        *windows*))
+
+(defun draw-window-box (id)
+  (cl-ncurses:box (or (get-window-by-id id) cl-ncurses:*stdscr*)
+                  (char-code #\|)
+                  (char-code #\-)))
+
+(defun get-window-by-id (id)
+  (cdr (assoc id *windows*)))
 
 (defmacro with-screen ((&body arguments) &body body)
   `(unwind-protect

@@ -6,7 +6,6 @@
   (creatures (make-hash-table)))
 
 (defun game-step (game)
-  (clear-screen)
   (print-map (game-map game))
   (write (game-player game)
          :stream :game-window)
@@ -31,7 +30,13 @@
                                            :name "test-map"
                                            :type "isol")))
   (push-object (game-map *game*) 3 2 (get-object-instance-from-symbol :gun))
-  (with-screen (:noecho :nocursor)
+  (with-screen (:noecho :nocursor :cbreak)
+    (clear-screen)
+    (create-new-window :game-window 0 0 30 30)
+    (create-new-window :info-window 30 0 20 30)
+    (redraw-screen)
+    (draw-window-box :game-window)
+    (draw-window-box :info-window)
     (catch 'end-game
       (handler-case (loop (game-step *game*)
                        (sleep 1/100))
