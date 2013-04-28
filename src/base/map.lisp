@@ -101,6 +101,19 @@
   :name "Rock"
   :description "A hunge gray rock lying on the floor."
   :movable? t
+  :passable? t
   :display-character #\*
   :hp :1000
   :material 'stone)
+
+(define-object-map-symbol :Knife Weapon
+  :name "Knife"
+  :description "Ordinary steel kitchen knife."
+  :damage-value 3
+  :kind (list :melee)
+  :size 1
+  :weight 50)
+
+(define-object-map-symbol :Long-Name Cloth
+  :name "Ahahahyapogarelpohardkoru"
+  :description "...")
