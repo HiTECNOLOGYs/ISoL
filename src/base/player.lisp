@@ -36,7 +36,7 @@
     (draw-char-at :game-window (display-character player) player-x player-y)))
 
 (defmethod print-object ((player Player) (stream (eql :info-window)))
-  (mapc (curry #'wprintw-newline :info-window)
+  (mapc (curry #'wprintw-newline-limited :info-window +info-window-size+)
         (append (list (format nil "HP: ~D" (hp player))
                       (format nil "WP: ~D" (wp player))
                       ""

@@ -5,8 +5,10 @@
 
 (defun bind-function-to-key (key function)
   "Assigns function to key."
-  (push (cons (char-code key) function)
-        *keys*))
+  (pushnew (cons (char-code key) function)
+           *keys*
+           :test #'=
+           :key #'car))
 
 (defmacro define-key-binding (key function)
   "Creates action with some code and `name' and binds it to `key'."

@@ -59,13 +59,15 @@
 
 (defmacro define-object-map-symbol (symbol class &body default-initargs)
   "Binds some symbol to lambda which will create object with some values preinitialized instances when called."
-  `(push (cons ,symbol
-               #'(lambda (&rest initargs)
-                   (if initargs
-                     (apply #'make-instance ',class
-                            ,@default-initargs initargs)
-                     (make-instance ',class ,@default-initargs))))
-         *objects-map-reader-symbols*))
+  `(pushnew (cons ,symbol
+                  #'(lambda (&rest initargs)
+                      (if initargs
+                          (apply #'make-instance ',class
+                                 ,@default-initargs initargs)
+                          (make-instance ',class ,@default-initargs))))
+            *objects-map-reader-symbols*
+            :test #'eql
+            :key #'car))
 
 (defun get-object-instance-from-symbol (symbol &rest initargs)
   "Returns instace of object for given `symbol'"
