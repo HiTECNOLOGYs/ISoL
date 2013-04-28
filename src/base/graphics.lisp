@@ -30,16 +30,39 @@
 
 (defun clear-screen ()
   "Completely clears screen."
-  (cl-ncurses:clear))
+  (cl-ncurses:erase)
+  (mapc (compose #'cl-ncurses:werase #'second)
+        *windows*))
+
+(defun clear-window (window-id)
+  "Clears given `window'."
+  (cl-ncurses:werase (or (get-window-by-id window-id) cl-ncurses:*stdscr*)))
+
+(defun reset-cursor-position (window-id)
+  (cl-ncurses:wmove (or (get-window-by-id window-id) cl-ncurses:*stdscr*)
+                    (car +drawing-offset+) (cdr +drawing-offset+)))
+
+(defun reset-all-windows-cursor-positions ()
+  (mapc (compose #'reset-cursor-position #'first) *windows*))
 
 (defun redraw-screen ()
   "Refreshes screen."
   (mapc #'(lambda (window)
-            (cl-ncurses:wmove (cdr window) (car +drawing-offset+) (cdr +drawing-offset+)))
+            (reset-cursor-position (first window))
+            (when (third window)
+              (draw-window-box (first window))))
         *windows*)
   (cl-ncurses:refresh)
-  (mapc (compose #'cl-ncurses:wrefresh #'cdr)
+  (mapc (compose #'cl-ncurses:wrefresh #'second)
         *windows*))
+
+(defun redraw-window (window-id)
+  "Redraws given `window'."
+  (let ((window-ref (get-window-by-id window-id)))
+    (cl-ncurses:wmove window-ref
+                      (car +drawing-offset+)
+                      (cdr +drawing-offset+))
+    (cl-ncurses:wrefresh window-ref)))
 
 (defun wprintw-newline (window string)
   "Prints text to ncurses with new line at the end."
@@ -49,6 +72,12 @@
     (destructuring-bind (column . row) (get-cursor-position window)
       (declare (ignore column))
       (cl-ncurses:wmove window-ref (1+ row) (cdr +drawing-offset+)))))
+
+(defun wprintw-newline-limited (window length string)
+  (if (> (length string) length)
+    (wprintw-newline window (concatenate 'string (subseq string 0 (- length 5))
+                                         "..."))
+    (wprintw-newline window string)))
 
 (defun draw-char-at (window char x y)
   "Sets some position in `window' to `char'."
@@ -81,10 +110,14 @@
                       column)
     (cons column row)))
 
-(defun create-new-window (id x-position y-position x-size y-size)
+(defun create-new-window (id x-position y-position x-size y-size &key with-box?)
   "Creates new window with given `id', position and size."
-  (push (cons id (cl-ncurses:newwin y-size x-size y-position x-position))
-        *windows*))
+  (pushnew (list id
+                 (cl-ncurses:newwin y-size x-size y-position x-position)
+                 with-box?)
+           *windows*
+           :test #'eql
+           :key #'first))
 
 (defun draw-window-box (id)
   "Draws box around the window with given `id'."
@@ -94,7 +127,7 @@
 
 (defun get-window-by-id (id)
   "Returns window reference for given window `id'."
-  (cdr (assoc id *windows*)))
+  (second (assoc id *windows*)))
 
 (defmacro with-screen ((&body arguments) &body body)
   "Gurantee that wrapped code will be executed after successful initialization of screen and that screen will be properly deinitialized after `body' execution."

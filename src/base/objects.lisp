@@ -57,3 +57,7 @@
 
 (defgeneric move-creature (creature map x y)
   (:documentation "Moves creature by `x' points on X axis and by `y' points on Y axis."))
+
+
+(defmethod display-character ((object (eql nil)))
+  #\Space)
