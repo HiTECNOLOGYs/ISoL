@@ -11,6 +11,7 @@
 (defun game-step (game)
   (clear-screen)
   (reset-all-windows-cursor-positions)
+  (display-message "Welcome to ISoL!" (- (car (get-screen-size)) 2))
   (print-map (game-map game))
   (write (game-player game)
          :stream :game-window)

@@ -22,6 +22,7 @@
                                                            (:file "keyboard")
                                                            (:file "player")
                                                            (:file "graphics")
+                                                           (:file "user-interaction")
                                                            (:file "game")
                                                            (:file "main")))))))
 

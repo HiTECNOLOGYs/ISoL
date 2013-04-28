@@ -73,10 +73,11 @@
       (declare (ignore column))
       (cl-ncurses:wmove window-ref (1+ row) (cdr +drawing-offset+)))))
 
-(defun wprintw-newline-limited (window length string)
+(defun wprintw-newline-limited (window length string &optional replacement)
   (if (> (length string) length)
-    (wprintw-newline window (concatenate 'string (subseq string 0 (- length 5))
-                                         "..."))
+    (wprintw-newline window (concatenate 'string (subseq string 0
+                                                         (- length 2 (length replacement)))
+                                         replacement))
     (wprintw-newline window string)))
 
 (defun draw-char-at (window char x y)
