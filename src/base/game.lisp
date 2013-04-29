@@ -2,6 +2,7 @@
 
 (define-constant +info-window-size+ 20)
 (define-constant +minibuffer-size+ 2)
+(defparameter *screen-size* (get-screen-size))
 
 (defstruct Game
   map
@@ -11,7 +12,6 @@
 (defun game-step (game)
   (clear-screen)
   (reset-all-windows-cursor-positions)
-  (display-message "Welcome to ISoL!" (- (car (get-screen-size)) 2))
   (print-map (game-map game))
   (write (game-player game)
          :stream :game-window)
@@ -58,6 +58,7 @@
                                (- (1- x) +info-window-size+) 0
                                +info-window-size+ y
                                :with-box? t))
+          (display-message-in-minibuffer "Welcome to ISoL" (- (car *screen-size*) 2))
           (redraw-screen)
           (loop (game-step game)
              (sleep 1/100)))
