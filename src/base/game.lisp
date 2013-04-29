@@ -59,7 +59,8 @@
                                +info-window-size+ y
                                :with-box? t))
           (display-message-in-minibuffer "Welcome to ISoL" (- (car *screen-size*) 2))
-          (redraw-screen)
+          (let ((text (prompt-input "Type a letter" '((#\a "HAHA") (#\b "LOLO")))))
+            (display-message-in-minibuffer text (- (car *screen-size*) 2)))
           (loop (game-step game)
              (sleep 1/100)))
       (sb-sys:interactive-interrupt ()
