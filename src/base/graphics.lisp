@@ -117,8 +117,13 @@
                  (cl-ncurses:newwin y-size x-size y-position x-position)
                  with-box?)
            *windows*
-           :test #'eql
            :key #'first))
+
+(defun delete-window (id)
+  (when-let (window (get-window-by-id id))
+    (setf *windows* (remove id *windows*
+                           :key #'first))
+    (cl-ncurses:delwin window)))
 
 (defun draw-window-box (id)
   "Draws box around the window with given `id'."
