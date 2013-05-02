@@ -22,6 +22,13 @@
   (when (map-cell-passable-p map (+ (player-x player) x) (+ (player-y player) y))
     (incf (player-x player) x)
     (incf (player-y player) y)
+    (when (< 1 (length (get-map-cell-value map (player-x player) (player-y player))))
+      (push-drawing-task #'display-message-in-minibuffer
+                         (format nil "~A is lying here."
+                                 (name (get-map-cell-top map
+                                                         (player-x player)
+                                                         (player-y player))))
+                         (- (car (get-screen-size)) 2)))
     (list (player-x player) (player-y player))))
 
 (defmethod pick-up-object ((player Player) map)
