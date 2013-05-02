@@ -9,15 +9,16 @@
   (player (make-instance 'player :location (list 1 1)))
   (creatures (make-hash-table)))
 
-(defun game-step (game)
-  (clear-screen)
-  (reset-all-windows-cursor-positions)
-  (print-map (game-map game))
-  (write (game-player game)
-         :stream :game-window)
-  (write (game-player game)
-         :stream :info-window)
-  (redraw-screen)
+(defun game-tick (game)
+  (push-drawing-task #'print-map
+                     (game-map game))
+  (push-drawing-task #'write
+                     (game-player game)
+                     :stream :game-window)
+  (push-drawing-task #'write
+                     (game-player game)
+                     :stream :info-window)
+  (screen-tick)
   (process-key (wait-for-key)
                (game-player game)
                (game-map game)))
@@ -43,8 +44,10 @@
         (with-screen (:noecho :nocursor :cbreak)
           (destructuring-bind (x . y) (get-screen-size)
             (when (or (< x 40) (< y 40))
-              (wprintw-newline nil "To play ISoL you need at least 40 rows and 40 column in your terminal, sorry. To quit press ^C.")
-              (redraw-screen)
+              (push-drawing-task #'wprintw-newline
+                                 nil
+                                 "To play ISoL you need at least 40 rows and 40 column in your terminal, sorry. To quit press ^C.")
+              (screen-tick)
               (loop))
             (create-new-window :minibuffer
                                0 (- (1- y) +minibuffer-size+)
@@ -58,11 +61,11 @@
                                (- (1- x) +info-window-size+) 0
                                +info-window-size+ y
                                :with-box? t))
-          (display-message-in-minibuffer "Welcome to ISoL" (- (car *screen-size*) 2))
-          (let ((text (prompt-input "Type a letter" '((#\a "HAHA") (#\b "LOLO")))))
-            (display-message-in-minibuffer text (- (car *screen-size*) 2)))
-          (loop (game-step game)
-             (sleep 1/100)))
+          (push-drawing-task #'display-message-in-minibuffer
+                             "Welcome to ISoL"
+                             (- (car *screen-size*) 2))
+          (loop (game-tick game)
+                (sleep 1/100)))
       (sb-sys:interactive-interrupt ()
         (throw 'end-game (values)))
       (exit-game ()
