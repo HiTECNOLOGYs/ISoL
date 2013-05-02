@@ -2,7 +2,7 @@
 
 (define-constant +info-window-size+ 20)
 (define-constant +minibuffer-size+ 2)
-(defparameter *screen-size* (get-screen-size))
+(defparameter *screen-size* nil)
 
 (defstruct Game
   map
@@ -42,7 +42,8 @@
   (catch 'end-game
     (handler-case
         (with-screen (:noecho :nocursor :cbreak)
-          (destructuring-bind (x . y) (get-screen-size)
+          (setf *screen-size* (get-screen-size))
+          (destructuring-bind (x . y) *screen-size*
             (when (or (< x 40) (< y 40))
               (push-drawing-task #'wprintw-newline
                                  nil
