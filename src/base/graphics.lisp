@@ -182,8 +182,8 @@
          (cdr task)))
 
 (defun execute-drawing-task-from-top ()
-  (when-let (task (pop-drawing-task))
-    (execute-drawing-task task)))
+  (when *drawing-stack*
+    (execute-drawing-task (pop-drawing-task))))
 
 (defun execute-drawing-tasks ()
   (when *drawing-stack*
