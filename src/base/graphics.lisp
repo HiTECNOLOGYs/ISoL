@@ -47,14 +47,13 @@
 
 (defun redraw-screen ()
   "Refreshes screen."
-  (mapc #'(lambda (window)
-            (reset-cursor-position (first window))
-            (when (third window)
-              (draw-window-box (first window))))
-        *windows*)
+  (dolist (window *windows*)
+    (reset-cursor-position (first window))
+    (when (third window)
+      (draw-window-box (first window))))
   (cl-ncurses:refresh)
-  (mapc (compose #'cl-ncurses:wrefresh #'second)
-        *windows*))
+  (dolist (window *windows*)
+    (cl-ncurses:wrefresh (second window))))
 
 (defun redraw-window (window-id)
   "Redraws given `window'."
@@ -89,9 +88,8 @@
 
 (defun print-rendered-map (rendered-map)
   "Prints already rendered map."
-  (mapc (compose (curry #'wprintw-newline :game-window)
-                 #'list->string)
-        rendered-map))
+  (dolist (line rendered-map)
+    (wprintw-newline :game-window (list->string line))))
 
 (defun print-map (map)
   "Renders map and prints it."
@@ -122,7 +120,7 @@
 (defun delete-window (id)
   (when-let (window (get-window-by-id id))
     (setf *windows* (remove id *windows*
-                           :key #'first))
+                            :key #'first))
     (cl-ncurses:delwin window)))
 
 (defun draw-window-box (id)
