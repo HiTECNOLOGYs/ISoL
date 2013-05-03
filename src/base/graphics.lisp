@@ -4,8 +4,6 @@
 (defparameter *windows* nil)
 (define-constant +drawing-offset+ (cons 1 1))
 
-(defparameter *drawing-stack* nil)
-
 (defun initialize-screen (&rest arguments)
   "Initializes ncurses and sets some parameters."
   (unless *screen-initialized?*
@@ -168,31 +166,3 @@
      (progn (cl-ncurses:attroff ,(apply #'logior
                                         (loop for attribute in attributes
                                               collecting (get-attribute-name-from-keyword attribute)))))))
-
-
-(defun push-drawing-task (function &rest arguments)
-  (push (cons function arguments)
-        *drawing-stack*))
-
-(defun pop-drawing-task ()
-  (pop *drawing-stack*))
-
-(defun execute-drawing-task (task)
-  (apply (car task)
-         (cdr task)))
-
-(defun execute-drawing-task-from-top ()
-  (when *drawing-stack*
-    (execute-drawing-task (pop-drawing-task))))
-
-(defun execute-drawing-tasks ()
-  (when *drawing-stack*
-    (reset-all-windows-cursor-positions)
-    (execute-drawing-task-from-top)
-    (execute-drawing-tasks)))
-
-(defun screen-tick ()
-  (clear-screen)
-  (setf *drawing-stack* (reverse *drawing-stack*))
-  (execute-drawing-tasks)
-  (redraw-screen))

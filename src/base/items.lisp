@@ -48,3 +48,6 @@
   (:documentation "Called each time creature picks object."))
 (defgeneric combine-objects (item-1 item-2)
   (:documentation "Called when some creature tries to combine two items."))
+
+(defmethod print-object ((item Item) (stream (eql :minibuffer)))
+  (display-message-in-minibuffer (format nil "~A is lying here." (name item))))
