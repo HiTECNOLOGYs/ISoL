@@ -37,7 +37,7 @@
         *windows*))
 
 (defun clear-window (window-id)
-  "Clears given `window'."
+  "Clears window with given `window-id'."
   (cl-ncurses:werase (or (get-window-by-id window-id) cl-ncurses:*stdscr*)))
 
 (defun reset-cursor-position (window-id)
@@ -58,7 +58,7 @@
     (cl-ncurses:wrefresh (second window))))
 
 (defun redraw-window (window-id)
-  "Redraws given `window'."
+  "Redraws windows with given `window-id'."
   (let ((window-ref (get-window-by-id window-id)))
     (cl-ncurses:wmove window-ref
                       (car +drawing-offset+)
