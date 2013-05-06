@@ -2,7 +2,10 @@
 
 (defclass Player (Creature)
   ((hp :initform 100)
-   (wp :initform 100))
+   (wp :initform 100)
+   (hunger :initform 1000)
+   (thirst :initform 500)
+   (energy :initform 10000))
   (:documentation "Player character."))
 
 (defun player-x (player)

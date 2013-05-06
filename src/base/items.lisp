@@ -24,7 +24,7 @@
    (hook :initarg :hook
          :accessor hook)))
 
-(defclass Cloth(Item)
+(defclass Cloth (Item)
   ((display-character :initform #\])
    (defence-value :initarg :defence-value
                   :accessor defence-value)

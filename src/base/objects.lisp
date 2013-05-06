@@ -37,6 +37,12 @@
    (wp :initarg :wp
        :accessor wp
        :documentation "Will points. Decreases if creature is under stress or something. Determines lots of stuff.")
+   (hunger :initarg :hunger
+           :accessor hunger)
+   (thirst :initarg :thirst
+           :accessor thirst)
+   (energy :initarg :energy
+           :accessor energy)
    (level :initarg :level
           :initform 0
           :accessor level)
