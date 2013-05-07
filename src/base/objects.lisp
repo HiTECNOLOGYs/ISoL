@@ -63,8 +63,9 @@
               :initform nil
               :accessor inventory)
    (hands :initarg :hands
-          :initform nil
-          :accessor hands)
+          :initform (cons nil nil)
+          :accessor hands
+          :documentation "CAR is right hand and CDR is left.")
    (clothes :initarg clothes
             :initform nil
             :accessor clothes))
@@ -72,12 +73,12 @@
 
 (defmethod initialize-instance :after ((creature Creature) &rest initargs)
   (declare (ignore initargs))
-  (dolist (slot '(hp wp hunger thirst energy))
-    (unless (slot-boundp creature slot)
-      (setf (slot-value creature slot)
-            (slot-value creature (intern (concatenate 'string
-                                                      "MAX-"
-                                                      (symbol-name slot))))))))
+  (loop for slot in '(hp wp hunger thirst energy)
+        for slot-max in '(max-hp max-wp max-hunger max-thirst max-energy)
+        unless (slot-boundp creature slot)
+          when (slot-boundp creature slot-max)
+            do (setf (slot-value creature slot)
+                     (slot-value creature slot-max))))
 
 
 (defgeneric move-creature (creature map x y)
