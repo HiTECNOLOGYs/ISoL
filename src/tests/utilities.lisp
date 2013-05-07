@@ -13,9 +13,3 @@
     `(with-test-map (,map-variable)
        (let ((,variable (render-map ,map-variable)))
          ,@body))))
-
-(defmacro with-test-screen (&body body)
-  `(unwind-protect
-        (progn (initialize-screen)
-               ,@body)
-     (deinitialize-screen)))

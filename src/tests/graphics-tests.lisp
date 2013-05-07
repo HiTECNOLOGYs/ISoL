@@ -1,16 +1,7 @@
 (in-package :isol)
 (in-suite graphics-tests)
 
-(test test-screen-manipulations
-  (is (and (initialize-screen :noecho :keypad)
-           (not (deinitialize-screen)))))
-
-(test (test-player-printing :depends-on test-screen-manipulations)
-  (with-test-screen
-    (let ((player (make-instance 'player :location (list 1 2))))
-      (write player :stream :game-window))))
-
-(test (test-map-output :depends-on (and test-screen-manipulations test-map-rendering))
-  (with-test-map (map)
-    (with-test-screen
-      (is (print-map map)))))
+(test test-attrubutes
+  (is (= cl-ncurses:a_normal (get-attribute-name-from-keyword :normal)))
+  (is (= cl-ncurses:a_blink (get-attribute-name-from-keyword :blink)))
+  (is (= cl-ncurses:a_invis (get-attribute-name-from-keyword :invis))))
