@@ -1,7 +1,10 @@
 (in-package :isol)
 
 (defclass Object ()
-  ((name :initarg :name
+  ((display-character :initarg :display-character
+                      :accessor display-character
+                      :initform #\0)
+   (name :initarg :name
          :accessor name)
    (description :initarg :description
                 :accessor description)
@@ -12,9 +15,6 @@
              :accessor takable-p)
    (passable? :initarg :passable?
               :accessor passable-p)
-   (display-character :initarg :display-character
-                      :accessor display-character
-                      :initform #\0)
    (hp :initarg :hp
        :accessor hp)
    (material :initarg :material
@@ -34,15 +34,25 @@
              :accessor location)
    (hp :initarg :hp
        :accessor hp)
+   (max-hp :initarg :max-hp
+           :accessor max-hp)
    (wp :initarg :wp
        :accessor wp
-       :documentation "Will points. Decreases if creature is under stress or something. Determines lots of stuff.")
+       :documentation "Sanity. When this goes zero player looses control on PC.")
+   (max-wp :initarg :max-wp
+           :accessor :max-wp)
    (hunger :initarg :hunger
            :accessor hunger)
+   (max-hunger :initarg :max-hunger
+               :accessor max-hunger)
    (thirst :initarg :thirst
            :accessor thirst)
+   (max-thirst :initarg :max-thirst
+               :accessor max-thirst)
    (energy :initarg :energy
            :accessor energy)
+   (max-energy :initarg :max-energy
+               :accessor max-energy)
    (level :initarg :level
           :initform 0
           :accessor level)
@@ -59,6 +69,15 @@
             :initform nil
             :accessor clothes))
   (:documentation "Living creature is object too of course."))
+
+(defmethod initialize-instance :after ((creature Creature) &rest initargs)
+  (declare (ignore initargs))
+  (dolist (slot '(hp wp hunger thirst energy))
+    (unless (slot-boundp creature slot)
+      (setf (slot-value creature slot)
+            (slot-value creature (intern (concatenate 'string
+                                                      "MAX-"
+                                                      (symbol-name slot))))))))
 
 
 (defgeneric move-creature (creature map x y)

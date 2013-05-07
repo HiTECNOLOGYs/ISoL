@@ -1,11 +1,11 @@
 (in-package :isol)
 
 (defclass Player (Creature)
-  ((hp :initform 100)
-   (wp :initform 100)
-   (hunger :initform 1000)
-   (thirst :initform 500)
-   (energy :initform 10000))
+  ((max-hp :initform 100)
+   (max-wp :initform 100)
+   (max-hunger :initform 1000)
+   (max-thirst :initform 500)
+   (max-energy :initform 10000))
   (:documentation "Player character."))
 
 (defun player-x (player)
