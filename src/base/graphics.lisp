@@ -167,6 +167,6 @@
                                           (loop for attribute in attributes
                                                 collecting (get-attribute-name-from-keyword attribute))))
                ,@body)
-     (progn (cl-ncurses:attroff ,(apply #'logior
-                                        (loop for attribute in attributes
-                                              collecting (get-attribute-name-from-keyword attribute)))))))
+     (cl-ncurses:attroff ,(apply #'logior
+                                 (loop for attribute in attributes
+                                    collecting (get-attribute-name-from-keyword attribute))))))

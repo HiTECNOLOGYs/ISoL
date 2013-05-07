@@ -51,8 +51,8 @@
 (defmethod perform ((op test-op) (c (eql (find-system :isol))))
   (operate 'load-op :isol)
   (operate 'load-op :isol-tests)
-  (mapcar #'fiveam:run '(isol::game-tests
-                         isol::graphics-tests
-                         isol::map-tests
-                         isol::objects-tests
-                         isol::player-tests)))
+  (mapc #'fiveam:run '(isol::game-tests
+                       isol::graphics-tests
+                       isol::map-tests
+                       isol::objects-tests
+                       isol::player-tests)))
