@@ -10,6 +10,7 @@
   (creatures (make-hash-table)))
 
 (defun game-tick (game)
+  "Game step. Draw map, player, stuff and prompts player for action."
   (reset-all-windows-cursor-positions)
   (print-map (game-map game))
   (write (game-player game)
@@ -50,8 +51,7 @@
           (setf *screen-size* (get-screen-size))
           (destructuring-bind (x . y) *screen-size*
             (when (or (< x 80) (< y 40))
-              (wprintw-newline nil
-                               "To play ISoL you need at least 40 rows and 80 column in your terminal, sorry. To quit press ^C.")
+              (wprintw-newline nil "To play ISoL you need at least 40 rows and 80 column in your terminal, sorry. To quit press ^C.")
               (redraw-screen)
               (loop))
             (delete-windows)

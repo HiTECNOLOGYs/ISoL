@@ -134,6 +134,7 @@
   (second (assoc id *windows*)))
 
 (defun delete-windows ()
+  "Deteles all existed windows."
   (setf *windows* nil))
 
 (defmacro with-screen ((&body arguments) &body body)

@@ -39,6 +39,7 @@
     (draw-char-at :game-window (display-character player) player-x player-y)))
 
 (defmacro define-encoder (name divisor &body values)
+  "Defines new function to make string that describes some creature parameter by it's value."
   (let ((delta-gensym (gensym))
         (quarter-gensym (gensym)))
     `(defun ,(symbol-append 'encode- name) (value max-value)
@@ -81,7 +82,7 @@
   (2.5  "You REALLY want to eat something")
   (3.5  "Your stomach is killing you")
   (4    "DAMN I NEED FOOD")
-  "You're starving")
+        "You're starving")
 
 (define-encoder thirst 4
   (0.25 "You're not thirsty")
@@ -92,7 +93,7 @@
   (2.5  "You really want to drink something")
   (3.5  "You well weakness from dehydration")
   (4    "WATER NEED WATER")
-  "You're dying of thirst")
+        "You're dying of thirst")
 
 (define-encoder energy 4
   (0.25 "You're full of energy!")
