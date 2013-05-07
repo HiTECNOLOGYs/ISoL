@@ -133,6 +133,9 @@
   "Returns window reference for given window `id'."
   (second (assoc id *windows*)))
 
+(defun delete-windows ()
+  (setf *windows* nil))
+
 (defmacro with-screen ((&body arguments) &body body)
   "Gurantee that wrapped code will be executed after successful initialization of screen and that screen will be properly deinitialized after `body' execution."
   `(unwind-protect

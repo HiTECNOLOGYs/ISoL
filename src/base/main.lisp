@@ -5,5 +5,5 @@
 
 (defun main ()
   "Start point."
-  (defparameter *game* (make-game))
+  (setf *game* (make-game))
   (run-game *game*))

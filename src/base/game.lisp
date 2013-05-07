@@ -1,6 +1,6 @@
 (in-package :isol)
 
-(define-constant +info-window-size+ 20)
+(define-constant +info-window-size+ 40)
 (define-constant +minibuffer-size+ 2)
 (defparameter *screen-size* nil)
 
@@ -49,11 +49,12 @@
         (with-screen (:noecho :nocursor :cbreak)
           (setf *screen-size* (get-screen-size))
           (destructuring-bind (x . y) *screen-size*
-            (when (or (< x 40) (< y 40))
+            (when (or (< x 80) (< y 40))
               (wprintw-newline nil
-                               "To play ISoL you need at least 40 rows and 40 column in your terminal, sorry. To quit press ^C.")
+                               "To play ISoL you need at least 40 rows and 80 column in your terminal, sorry. To quit press ^C.")
               (redraw-screen)
               (loop))
+            (delete-windows)
             (create-new-window :minibuffer
                                0 (- (1- y) +minibuffer-size+)
                                (- (1- x) +info-window-size+) (1+ +minibuffer-size+)
@@ -66,6 +67,7 @@
                                (- (1- x) +info-window-size+) 0
                                +info-window-size+ y
                                :with-box? t))
+          (clear-screen)
           (display-message-in-minibuffer "Welcome to ISoL")
           (loop (game-tick game)
                 (sleep 1/100)))

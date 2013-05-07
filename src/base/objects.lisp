@@ -40,7 +40,7 @@
        :accessor wp
        :documentation "Sanity. When this goes zero player looses control on PC.")
    (max-wp :initarg :max-wp
-           :accessor :max-wp)
+           :accessor max-wp)
    (hunger :initarg :hunger
            :accessor hunger)
    (max-hunger :initarg :max-hunger
