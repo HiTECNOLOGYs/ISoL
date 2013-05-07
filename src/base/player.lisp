@@ -38,10 +38,80 @@
   (destructuring-bind (player-x player-y) (location player)
     (draw-char-at :game-window (display-character player) player-x player-y)))
 
+(defmacro define-encoder (name divisor &body values)
+  (let ((delta-gensym (gensym))
+        (quarter-gensym (gensym)))
+    `(defun ,(symbol-append 'encode- name) (value max-value)
+       (let ((,delta-gensym (- max-value value))
+             (,quarter-gensym (/ max-value ,divisor)))
+         (cond
+           ((= ,delta-gensym max-value) ,(car (last values)))
+           ,@(loop for (multiplier string) in (butlast values)
+                   collecting `((<= ,delta-gensym (* ,multiplier ,quarter-gensym))
+                                ,string)))))))
+
+(define-encoder hp 4
+  (0.25 "You're not injured at all")
+  (0.5  "You have some little scratches")
+  (0.75 "You have some scratches")
+  (1    "You're injured")
+  (2    "You're sightly injured")
+  (2.5  "You're seriously injured")
+  (3.5  "You're dying")
+  (4    "You're almost dead")
+        "You're dead, completely dead")
+
+(define-encoder wp 4
+  (0.25 "Your mind is clear")
+  (0.5  "You feel weird")
+  (0.75 "You feel dizzy")
+  (1    "You feel nervours")
+  (2    "Your head aches")
+  (2.5  "You have severe headache")
+  (3.5  "You're hallucinating")
+  (4    "???")
+        "You feel insane, you can't control your body")
+
+(define-encoder hunger 4
+  (0.25 "You're not hungry")
+  (0.5  "Your stomach rumbles")
+  (0.75 "You won't mind to eat something")
+  (1    "You need to eat something")
+  (2    "You really need to eat something")
+  (2.5  "You REALLY want to eat something")
+  (3.5  "Your stomach is killing you")
+  (4    "DAMN I NEED FOOD")
+  "You're starving")
+
+(define-encoder thirst 4
+  (0.25 "You're not thirsty")
+  (0.5  "You feel dryness in your throat")
+  (0.75 "You feel little thirst")
+  (1    "You won't mind to drink something")
+  (2    "You feel thirst")
+  (2.5  "You really want to drink something")
+  (3.5  "You well weakness from dehydration")
+  (4    "WATER NEED WATER")
+  "You're dying of thirst")
+
+(define-encoder energy 4
+  (0.25 "You're full of energy!")
+  (0.5  "You're not tired at all")
+  (1    "You need a nap")
+  (2    "You feel a little tired")
+  (2.5  "You're tired")
+  (3.5  "You're very tired")
+  (3.75 "You can't concentrate and walk")
+  (4    "You can't stay awake")
+        "You're exhausted, you fell asleep")
+
 (defmethod print-object ((player Player) (stream (eql :info-window)))
   (mapc (curry #'wprintw-newline-limited :info-window +info-window-size+)
-        (append (list (format nil "HP: ~D" (hp player))
-                      (format nil "WP: ~D" (wp player))
+        (append (list (encode-hp (hp player) (max-hp player))
+                      (encode-wp (wp player) (max-wp player))
+                      (encode-hunger (hunger player) (max-hunger player))
+                      (encode-thirst (thirst player) (max-thirst player))
+                      (encode-energy (energy player) (max-energy player))
                       ""
                       "Inventory:"
                       "---")
