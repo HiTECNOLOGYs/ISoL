@@ -11,7 +11,7 @@
 
 (defun game-tick (game)
   "Game step. Draw map, player, stuff and prompts player for action."
-  (reset-all-windows-cursor-positions)
+  (reset-all-windows-cursor-position)
   (print-map (game-map game))
   (write (game-player game)
          :stream :game-window)
@@ -54,19 +54,19 @@
               (wprintw-newline nil "To play ISoL you need at least 40 rows and 80 column in your terminal, sorry. To quit press ^C.")
               (redraw-screen)
               (loop))
-            (delete-windows)
-            (create-new-window :minibuffer
-                               0 (- (1- y) +minibuffer-size+)
-                               (- (1- x) +info-window-size+) (1+ +minibuffer-size+)
-                               :with-box? t)
-            (create-new-window :game-window
-                               0 0
-                               (- (1- x) +info-window-size+) (- (1- y) +minibuffer-size+)
-                               :with-box? t)
-            (create-new-window :info-window
-                               (- (1- x) +info-window-size+) 0
-                               +info-window-size+ y
-                               :with-box? t))
+            (remove-all-windows)
+            (make-new-window :minibuffer
+                             0 (- (1- y) +minibuffer-size+)
+                             (- (1- x) +info-window-size+) (1+ +minibuffer-size+)
+                             :have-box? t)
+            (make-new-window :game-window
+                             0 0
+                             (- (1- x) +info-window-size+) (- (1- y) +minibuffer-size+)
+                             :have-box? t)
+            (make-new-window :info-window
+                             (- (1- x) +info-window-size+) 0
+                             +info-window-size+ y
+                             :have-box? t))
           (clear-screen)
           (display-message-in-minibuffer "Welcome to ISoL")
           (loop (game-tick game)
