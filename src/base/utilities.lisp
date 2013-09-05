@@ -47,3 +47,9 @@ Binds `x-var' to current x position and `y-var' to current y position."
      (dotimes (,y-var y-size)
        (dotimes (,x-var x-size)
          ,@body))))
+
+(defun symbol-append (symbol-1 symbol-2 &optional (package *package*))
+  (intern (concatenate 'string
+                       (symbol-name symbol-1)
+                       (symbol-name symbol-2))
+          package))
