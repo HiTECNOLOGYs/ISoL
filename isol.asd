@@ -8,7 +8,7 @@
   :description "Just another roguelike RPG."
   :author "Mark Fedurin <hitecnologys@gmail.com>"
   :license "GPL v3"
-  :defsystem-depends-on (:fiveam :cl-ncurses :cl-store)
+  :depends-on (:fiveam :cl-ncurses :cl-store)
   :components ((:module src
                         :serial t
                         :components ((:file "packages")
@@ -31,7 +31,7 @@
   :description "Set of unit-tests for ISoL."
   :author "Mark Fedurin <hitecnologys@gmail>"
   :license "GPL v3"
-  :defsystem-depends-on (:fiveam :isol)
+  :depends-on (:fiveam :isol)
   :components ((:module src
                         :serial t
                         :components ((:file "packages")
