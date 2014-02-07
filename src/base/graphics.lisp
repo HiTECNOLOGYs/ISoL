@@ -6,47 +6,47 @@
 (defun initialize-screen (&rest arguments)
   "Initializes ncurses and sets some parameters."
   (unless *screen-initialized?*
-    (cl-ncurses:initscr)
+    (initscr)
     (setf *screen-initialized?* t))
   (dolist (argument arguments)
     (case argument
-      (:echo (cl-ncurses:echo))
-      (:noecho (cl-ncurses:noecho))
-      (:raw (cl-ncurses:raw))
-      (:noraw (cl-ncurses:noraw))
-      (:cbreak (cl-ncurses:cbreak))
-      (:nocbreak (cl-ncurses:nocbreak))
-      (:cursor (cl-ncurses:curs-set 1))
-      (:nocursor (cl-ncurses:curs-set 0))))
+      (:echo (echo))
+      (:noecho (noecho))
+      (:raw (raw))
+      (:noraw (noraw))
+      (:cbreak (cbreak))
+      (:nocbreak (nocbreak))
+      (:cursor (curs-set 1))
+      (:nocursor (curs-set 0))))
   *screen-initialized?*)
 
 (defun deinitialize-screen ()
   "Deinitializes ncurses."
   (when *screen-initialized?*
-    (cl-ncurses:endwin)
+    (endwin)
     (setf *screen-initialized?* nil))
   *screen-initialized?*)
 
 (defun clear-screen ()
   "Completely clears screen."
-  (cl-ncurses:erase)
+  (erase)
   (clear-all-windows)
   (values))
 
 (defun redraw-screen ()
   "Refreshes screen."
-  (cl-ncurses:refresh)
+  (refresh)
   (redraw-all-windows)
   (values))
 
 (defun wprintw-newline (window-id string)
   "Prints text to ncurses with new line at the end."
-  (let ((window-ref (or (window-ref (get-window-by-id window-id)) cl-ncurses:*stdscr*)))
-    (cl-ncurses:wprintw window-ref
+  (let ((window-ref (or (window-ref (get-window-by-id window-id)) *stdscr*)))
+    (wprintw window-ref
                         string)
     (destructuring-bind (column . row) (get-window-cursor-position window-ref)
       (declare (ignore column))
-      (cl-ncurses:wmove window-ref (1+ row) (cdr +drawing-offset+)))))
+      (wmove window-ref (1+ row) (cdr +drawing-offset+)))))
 
 (defun wprintw-newline-limited (window-id length string &optional replacement)
   (if (> (length string) length)
@@ -56,9 +56,9 @@
                                             replacement))
     (wprintw-newline window-id string)))
 
-(defun draw-char-at (window-id char x y)
+(defun draw-char-at (window-ref char x y)
   "Sets some position in `window' to `char'."
-  (cl-ncurses:mvwaddch (or (window-ref (get-window-by-id window-id)) cl-ncurses:*stdscr*)
+  (mvwaddch (or (window-ref (get-window-by-id window-id)) *stdscr*)
                        (+ (cdr +drawing-offset+) y)
                        (+ (car +drawing-offset+) x)
                        (char-int char)))
@@ -75,7 +75,7 @@
 (defun get-screen-size ()
   "Returns size of terminal screen."
   (let (rows columns)
-    (cl-ncurses:getmaxyx cl-ncurses:*stdscr* rows columns)
+    (getmaxyx *stdscr* rows columns)
     (cons columns rows)))
 
 (defmacro with-screen ((&body arguments) &body body)
@@ -90,24 +90,24 @@
   (if (not (keywordp attribute))
     attribute
     (case attribute
-      (:normal cl-ncurses:a_normal)
-      (:standout cl-ncurses:a_standout)
-      (:underline cl-ncurses:a_underline)
-      (:reverse cl-ncurses:a_reverse)
-      (:blink cl-ncurses:a_blink)
-      (:dim cl-ncurses:a_dim)
-      (:bold cl-ncurses:a_bold)
-      (:protect cl-ncurses:a_protect)
-      (:invis cl-ncurses:a_invis)
-      (:altcharset cl-ncurses:a_altcharset))))
+      (:normal a_normal)
+      (:standout a_standout)
+      (:underline a_underline)
+      (:reverse a_reverse)
+      (:blink a_blink)
+      (:dim a_dim)
+      (:bold a_bold)
+      (:protect a_protect)
+      (:invis a_invis)
+      (:altcharset a_altcharset))))
 
 (defmacro with-attributes ((&body attributes) &body body)
   "Wrapped code will be executed with given attributes and after `body' execution attributes will be disabled."
   `(unwind-protect
-        (progn (cl-ncurses:attron ,(apply #'logior
+        (progn (attron ,(apply #'logior
                                           (loop for attribute in attributes
                                                 collecting (get-attribute-name-from-keyword attribute))))
                ,@body)
-     (cl-ncurses:attroff ,(apply #'logior
+     (attroff ,(apply #'logior
                                  (loop for attribute in attributes
                                     collecting (get-attribute-name-from-keyword attribute))))))

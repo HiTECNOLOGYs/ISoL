@@ -1,5 +1,5 @@
 (defpackage :isol
   (:use #:cl
-        #:cl-ncurses
+        #:cl-charms
         #:fiveam)
   (:export :main))

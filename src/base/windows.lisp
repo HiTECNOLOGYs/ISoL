@@ -11,7 +11,7 @@
 
 (defun make-window (window-id window-x window-y window-columns window-rows &key have-box? initial-scene)
   (list window-id
-        (cl-ncurses:newwin window-rows
+        (newwin window-rows
                            window-columns
                            window-y
                            window-x)
@@ -81,7 +81,7 @@
 (defun remove-window (window-id)
   "Removes window with given ID."
   (when-let (window (get-window-by-id window-id))
-    (cl-ncurses:delwin (window-ref window))
+    (delwin (window-ref window))
     (setf *windows*
           (remove window-id
                   *windows*
@@ -91,7 +91,7 @@
 (defun remove-all-windows ()
   "Clears windows list and removes all windows references from ncurses."
   (dolist (window *windows*)
-    (cl-ncurses:delwin (window-ref window)))
+    (delwin (window-ref window)))
   (setf *windows* nil)
   (values))
 
@@ -99,7 +99,7 @@
 (defun get-window-cursor-position (window-ref)
   "Returns cons where CAR is X coordinate of cursor position and CDR are Y."
   (let (x y)
-    (cl-ncurses:getyx (or window-ref cl-ncurses:*stdscr*)
+    (getyx (or window-ref *stdscr*)
                       y
                       x)
     (cons x y)))
@@ -107,7 +107,7 @@
 
 (defun draw-window-box (window-ref)
   "Draws box around given window."
-  (cl-ncurses:box (or window-ref cl-ncurses:*stdscr*)
+  (box (or window-ref *stdscr*)
                   (char-code #\|)
                   (char-code #\-))
   (values))
@@ -115,24 +115,24 @@
 
 (defun reset-window-cursor-position (window-ref)
   "Sets cursor position in given window to position from +drawing-offset+. Usually it's (1; 1)."
-  (cl-ncurses:wmove window-ref
+  (wmove window-ref
                     (cdr +drawing-offset+)
                     (car +drawing-offset+))
   (get-window-cursor-position window-ref))
 
 (defun redraw-window (window-ref &optional draw-box?)
   "Redraws given window."
-  (let ((window-ref (or window-ref cl-ncurses:*stdscr*)))
+  (let ((window-ref (or window-ref *stdscr*)))
     (reset-window-cursor-position window-ref)
     (when draw-box?
       (draw-window-box window-ref))
-    (cl-ncurses:wrefresh window-ref))
+    (wrefresh window-ref))
   (values))
 
 (defun clear-window (window-ref)
   "Replaces all window characters with spaces, basically clearing it completely."
-  (let ((window-ref (or window-ref (cl-ncurses:*stdscr*))))
-    (cl-ncurses:werase window-ref))
+  (let ((window-ref (or window-ref (*stdscr*))))
+    (werase window-ref))
   (values))
 
 (defun clear-all-windows ()

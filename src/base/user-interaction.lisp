@@ -5,7 +5,7 @@
   (let ((max-length (- (car *screen-size*) 2)))
     (clear-window-id :minibuffer)
     (reset-window-cursor-position-id :minibuffer)
-    (cl-ncurses:wprintw (window-ref (get-window-by-id :minibuffer))
+    (wprintw (window-ref (get-window-by-id :minibuffer))
                         (subseq string 0 (min (1- max-length)
                                               (length string))))
     (redraw-window-id :minibuffer)

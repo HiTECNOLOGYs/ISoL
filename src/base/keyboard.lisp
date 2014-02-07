@@ -39,4 +39,4 @@
 
 (defun wait-for-key ()
   "Waits for user presses key."
-  (cl-ncurses:getch))
+  (getch))
