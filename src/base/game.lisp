@@ -1,77 +1,24 @@
 (in-package :isol)
 
-(define-constant +info-window-size+ 40)
-(define-constant +minibuffer-size+ 2)
+(define-constant +info-window-size+ 40
+  :test #'=)
+(define-constant +minibuffer-size+ 2
+  :test #'=)
 (defparameter *screen-size* nil)
 
-(defstruct Game
-  map
-  (player (make-instance 'player :location (list 1 1)))
-  (creatures (make-hash-table)))
+(defclass Game ()
+  ((map :initarg :map
+        :accessor game-map)
+   (player :initarg :player
+           :initform (make-instance 'player :location (list 1 1))
+           :accessor game-player)
+   (creatures :initarg :creatures
+              :initform (make-hash-table)
+              :accessor game-creatures)
+   (scenes :initform nil
+           :accessor game-scenes))
+  (:documentation "Stores necessary info about current game."))
 
-(defun game-tick (game)
-  "Game step. Draw map, player, stuff and prompts player for action."
-  (reset-all-windows-cursor-position)
-  (print-map (game-map game))
-  (write (game-player game)
-         :stream :game-window)
-  (write (game-player game)
-         :stream :info-window)
-  (let ((map-cell (get-map-cell-top (game-map game)
-                                    (player-x (game-player game))
-                                    (player-y (game-player game)))))
-    (when (typep map-cell 'item)
-      (write map-cell
-             :stream :minibuffer)))
-  (redraw-screen)
-  (process-key (wait-for-key)
-               (game-player game)
-               (game-map game))
-  (clear-screen))
-
-(define-condition exit-game () ())
-
-(define-key-processor #\q ()
-  (declare (ignore player map))
-  (error 'exit-game))
-
-(defun run-game (game)
-  "Runs game."
-  (setf (game-map game)
-        (load-map-from-file (make-pathname :directory '(:relative "res")
-                                           :name "test-map"
-                                           :type "isol")))
-  (push-object (game-map game) 2 2 (get-object-instance-from-symbol :gun))
-  (push-object (game-map game) 3 13 (get-object-instance-from-symbol :rock))
-  (push-object (game-map game) 1 9 (get-object-instance-from-symbol :knife))
-  (push-object (game-map game) 2 2 (get-object-instance-from-symbol :long-name))
-  (catch 'end-game
-    (handler-case
-        (with-screen (:noecho :nocursor :cbreak)
-          (setf *screen-size* (get-screen-size))
-          (destructuring-bind (x . y) *screen-size*
-            (when (or (< x 80) (< y 40))
-              (wprintw-newline nil "To play ISoL you need at least 40 rows and 80 column in your terminal, sorry. To quit press ^C.")
-              (redraw-screen)
-              (loop))
-            (remove-all-windows)
-            (make-new-window :minibuffer
-                             0 (- (1- y) +minibuffer-size+)
-                             (- (1- x) +info-window-size+) (1+ +minibuffer-size+)
-                             :have-box? t)
-            (make-new-window :game-window
-                             0 0
-                             (- (1- x) +info-window-size+) (- (1- y) +minibuffer-size+)
-                             :have-box? t)
-            (make-new-window :info-window
-                             (- (1- x) +info-window-size+) 0
-                             +info-window-size+ y
-                             :have-box? t))
-          (clear-screen)
-          (display-message-in-minibuffer "Welcome to ISoL")
-          (loop (game-tick game)
-                (sleep 1/100)))
-      (sb-sys:interactive-interrupt ()
-        (throw 'end-game (values)))
-      (exit-game ()
-        (throw 'end-game (values))))))
+(defun make-game (&rest initargs)
+  (apply #'make-instance 'Game
+         initargs))

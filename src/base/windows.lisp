@@ -9,12 +9,13 @@
   (setf (assoc window-id *windows*)
         new-value))
 
-(defun make-window (window-id window-x window-y window-columns window-rows &key have-box? initial-scene)
+(defun make-window (window-id window-x window-y window-columns window-rows
+                    &key have-box? initial-scene)
   (list window-id
         (newwin window-rows
-                           window-columns
-                           window-y
-                           window-x)
+                window-columns
+                window-y
+                window-x)
         have-box?
         (when initial-scene
           (list initial-scene))))
@@ -30,6 +31,11 @@
 
 (defun window-scenes (window)
   (fourth window))
+
+(defun window-size (window)
+  (let (x y)
+    (getmaxyx (window-ref window) y x)
+    (cons x y)))
 
 
 (defun (setf window-id) (new-value window)
@@ -51,8 +57,7 @@
 
 (defun push-window-scene (window-id scene)
   "Pushes scene from window."
-  (push scene
-        (window-scenes (get-window-by-id window-id)))
+  (push scene (window-scenes (get-window-by-id window-id)))
   scene)
 
 (defun pop-window-scene (window-id)
@@ -66,7 +71,8 @@
          arguments))
 
 
-(defun make-new-window (window-id window-x window-y window-columns window-rows &key have-box? initial-scene)
+(defun make-new-window (window-id window-x window-y window-columns window-rows
+                        &key have-box? initial-scene)
   "Adds new window."
   (let ((window (make-window window-id
                              window-x window-y
@@ -108,16 +114,16 @@
 (defun draw-window-box (window-ref)
   "Draws box around given window."
   (box (or window-ref *stdscr*)
-                  (char-code #\|)
-                  (char-code #\-))
+       (char-code #\|)
+       (char-code #\-))
   (values))
 
 
 (defun reset-window-cursor-position (window-ref)
   "Sets cursor position in given window to position from +drawing-offset+. Usually it's (1; 1)."
   (wmove window-ref
-                    (cdr +drawing-offset+)
-                    (car +drawing-offset+))
+         (cdr +drawing-offset+)
+         (car +drawing-offset+))
   (get-window-cursor-position window-ref))
 
 (defun redraw-window (window-ref &optional draw-box?)
@@ -131,7 +137,7 @@
 
 (defun clear-window (window-ref)
   "Replaces all window characters with spaces, basically clearing it completely."
-  (let ((window-ref (or window-ref (*stdscr*))))
+  (let ((window-ref (or window-ref *stdscr*)))
     (werase window-ref))
   (values))
 

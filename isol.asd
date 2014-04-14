@@ -4,7 +4,10 @@
   :license "GPL v3"
   :depends-on (:fiveam
                :cl-charms
-               :cl-store)
+               :cl-store
+               :alexandria
+               :anaphora
+               :iterate)
   :in-order-to ((test-op (load-op :isol/tests)))
   :perform (test-op (op component)
              (asdf/package:symbol-call :fiveam :run! :isol))
@@ -24,6 +27,7 @@
                              (:file "graphics")
                              (:file "user-interaction")
                              (:file "game")
+                             (:file "scenes")
                              (:file "main")))))
 
 (defsystem :isol/tests

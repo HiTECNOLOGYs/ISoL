@@ -46,8 +46,8 @@
   (:documentation "Called each time item is used by creature (not only by player)."))
 (defgeneric pick-up-object (creature map)
   (:documentation "Called each time creature picks object."))
-(defgeneric combine-objects (item-1 item-2)
-  (:documentation "Called when some creature tries to combine two items."))
+(defgeneric combine-objects (creature item-1 item-2)
+  (:documentation "Called whenever some creature tries to combine two items."))
 
 (defmethod print-object ((item Item) (stream (eql :minibuffer)))
   (display-message-in-minibuffer (format nil "~A is lying here." (name item))))

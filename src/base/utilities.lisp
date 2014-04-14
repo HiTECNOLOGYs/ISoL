@@ -1,26 +1,5 @@
 (in-package :isol)
 
-(defmacro if-let ((var form) true-clause &optional not-true-clause)
-  `(let ((,var ,form))
-     (if ,var
-       ,true-clause
-       ,not-true-clause)))
-
-(defmacro when-let ((var form) &body body)
-  "Binds predicate result to variable."
-  `(if-let (,var ,form)
-     (progn ,@body)))
-
-(defun curry (function &rest arguments)
-  "Partially applies arguments to function."
-  #'(lambda (&rest more-arguments)
-      (apply function (append arguments more-arguments))))
-
-(defun compose (function-1 function-2)
-  "Makes lambda of two function where `function-2' result is passed to `function-1'."
-  #'(lambda (&rest arguments)
-      (funcall function-1 (apply function-2 arguments))))
-
 (defun stream->list (stream &optional (s-expressions-processor nil processor-passed?))
   "Reads stream data to list of S-expressions."
   (loop for result = (read stream nil nil) while result

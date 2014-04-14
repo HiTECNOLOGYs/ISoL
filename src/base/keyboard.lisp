@@ -30,13 +30,19 @@
   (cdr (assoc key *keys*
               :test #'=)))
 
-(defun process-key (key player map &rest arguments)
+(defun process-key (key &rest arguments)
   "Runs function which is binded to some key."
   (when-let (key-processor (get-key-processor (if (integerp key)
                                                 key
                                                 (char-code key))))
-    (apply key-processor player map arguments)))
+    (apply key-processor arguments)))
 
 (defun wait-for-key ()
   "Waits for user presses key."
   (getch))
+
+(defmacro with-temporary-key-bindings (new-bindings &body body)
+  `(let ((*keys* (list ,@(loop for (character function) in new-bindings
+                               collecting `(cons ,(char-code character)
+                                                 ,function)))))
+     ,@body))
