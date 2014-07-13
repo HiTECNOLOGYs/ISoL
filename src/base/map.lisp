@@ -5,13 +5,16 @@
    (takable? :initform nil)
    (movable? :initarg :movable?
              :accessor movable-p))
-  (:documentation "Object whcih may not be fixed on map, may be even 'transparent' for player motions. But it is always untakable."))
+  (:documentation "Object whcih may not be fixed on map, may be even
+'transparent' for player motions.  But it is always untakable.
+Destructuable, though, like any other piece of map."))
 
 (defclass Map-Element (Object)
   ((display-character :initform #\#)
    (takable? :initform nil)
    (passable? :initform nil))
-  (:documentation "Object on map which is not movable as it is a part of world."))
+  (:documentation "Object on map which is not movable as it is a part of world.
+May be destroyed by creatures."))
 
 (defun find-list-size (list)
   "Calculates list size."
@@ -19,16 +22,19 @@
         (length (first list))))
 
 (defun list->array (list)
-  "Converts list to 2d array. A list should always be correct. (all sublists should be equal)"
+  "Converts list to 2d array. A list should always be correct. (all sublists
+should be equal)"
   (make-array (find-list-size list)
               :initial-contents list))
 
 (defun load-map-from-file (path)
-  "Loads map to memory as 2d array. Map is list of S-expressions. Each expressions represents each row of the map."
+  "Loads map to memory as 2d array. Map is list of S-expressions. Each
+expressions represents each row of the map."
   (with-open-file (file-stream path)
     (list->array
       (stream->list file-stream
-                    (curry #'mapcar (compose #'list #'get-object-instance-from-symbol))))))
+                    (curry #'mapcar
+                           (compose #'list #'get-object-instance-from-symbol))))))
 
 (defun render-map (map)
   "Transforms map in human-readable and printable form."
@@ -58,7 +64,8 @@
 (defparameter *objects-map-reader-symbols* nil)
 
 (defmacro define-object-map-symbol (symbol class &body default-initargs)
-  "Binds some symbol to lambda which will create object with some values preinitialized instances when called."
+  "Binds some symbol to lambda which will create instances of this object with
+some values preinitialized when called."
   `(pushnew (cons ,symbol
                   #'(lambda (&rest initargs)
                       (if initargs

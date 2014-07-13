@@ -21,7 +21,6 @@
   (setf (second (location player)) new-value))
 
 (defmethod move-creature ((player Player) map x y)
-  "Moves player relative and checks map cell to passability."
   (when (map-cell-passable-p map (+ (player-x player) x) (+ (player-y player) y))
     (incf (player-x player) x)
     (incf (player-y player) y)
@@ -39,7 +38,9 @@
     (draw-char-at :game-window (display-character player) player-x player-y)))
 
 (defmacro define-encoder (name divisor &body values)
-  "Defines new function to make string that describes some creature parameter by it's value."
+  "Defines function which returns values based on how close to maximum some
+creature's parameter is. Resulting function accepts two arguments: value,
+maximum-value."
   (let ((delta-gensym (gensym))
         (quarter-gensym (gensym)))
     `(defun ,(symbol-append 'encode- name) (value max-value)
@@ -79,9 +80,9 @@
   (0.75 "You won't mind to eat something")
   (1    "You need to eat something")
   (2    "You really need to eat something")
-  (2.5  "You REALLY want to eat something")
+  (2.5  "You feel uncontrollable desire to fill your stomach")
   (3.5  "Your stomach is killing you")
-  (4    "DAMN I NEED FOOD")
+  (4    "You're almost starving")
         "You're starving")
 
 (define-encoder thirst 4
@@ -91,20 +92,20 @@
   (1    "You won't mind to drink something")
   (2    "You feel thirst")
   (2.5  "You really want to drink something")
-  (3.5  "You well weakness from dehydration")
-  (4    "WATER NEED WATER")
+  (3.5  "You fell weakness from dehydration")
+  (4    "You're severely dehydrated")
         "You're dying of thirst")
 
 (define-encoder energy 4
   (0.25 "You're full of energy!")
   (0.5  "You're not tired at all")
-  (1    "You need a nap")
-  (2    "You feel a little tired")
+  (1    "You feel like you need a small nap")
+  (2    "You feel a little bit tired")
   (2.5  "You're tired")
   (3.5  "You're very tired")
   (3.75 "You can't concentrate and walk")
   (4    "You can't stay awake")
-        "You're exhausted, you fell asleep")
+        "You're completely exhausted")
 
 (defmethod print-object ((player Player) (stream (eql :info-window)))
   (mapc (curry #'wprintw-newline-limited :info-window +info-window-size+)

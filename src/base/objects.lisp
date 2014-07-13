@@ -38,7 +38,7 @@
            :accessor max-hp)
    (wp :initarg :wp
        :accessor wp
-       :documentation "Sanity. When this goes zero player looses control on PC.")
+       :documentation "Sanity. When this goes zero AI or player lose control on creature.")
    (max-wp :initarg :max-wp
            :accessor max-wp)
    (hunger :initarg :hunger
@@ -65,7 +65,7 @@
    (hands :initarg :hands
           :initform (cons nil nil)
           :accessor hands
-          :documentation "CAR is right hand and CDR is left.")
+          :documentation "(left-hand . right-hand)")
    (clothes :initarg clothes
             :initform nil
             :accessor clothes))

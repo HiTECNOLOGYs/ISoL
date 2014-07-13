@@ -20,7 +20,7 @@
          :accessor kind)))
 
 (defclass Tool (Item)
-  ((display-character :initform #\])
+  ((display-character :initform #\))
    (hook :initarg :hook
          :accessor hook)))
 
@@ -32,7 +32,7 @@
               :accessor body-slot)))
 
 (defclass Container (Item)
-  ((display-character :initform #\*)
+  ((display-character :initform #\%)
    (volume :initarg :volume
            :accessor container)
    (size :initarg :size
@@ -43,11 +43,11 @@
 
 
 (defgeneric use-object (creature map item)
-  (:documentation "Called each time item is used by creature (not only by player)."))
+  (:documentation "Called each time item is used by creature."))
 (defgeneric pick-up-object (creature map)
-  (:documentation "Called each time creature picks object."))
+  (:documentation "Called each time creature picks up object."))
 (defgeneric combine-objects (creature item-1 item-2)
-  (:documentation "Called whenever some creature tries to combine two items."))
+  (:documentation "Called whenever creature tries to combine two items."))
 
 (defmethod print-object ((item Item) (stream (eql :minibuffer)))
   (display-message-in-minibuffer (format nil "~A is lying here." (name item))))

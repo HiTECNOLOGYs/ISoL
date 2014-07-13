@@ -14,7 +14,7 @@
       (display-message-in-minibuffer (subseq string max-length)))))
 
 (defun prompt-input (string choices)
-  "Prompt user for a choice. `choices' are list of (CHAR RESULT)."
+  "Prompts user for a choice. `choices' are list of (CHAR RESULT)."
   (clear-window-id :minibuffer)
   (reset-window-cursor-position-id :minibuffer)
   (display-message-in-minibuffer string)
@@ -22,9 +22,11 @@
     (second (assoc char choices
                    :test #'equal))))
 
+;;; TODO Rewrite the whole menu code cause it's awful. Also, make use of
+;;;      scenes.
 (defun draw-center-menu (window items)
   "Draws some lines at the center of some window and highlights line
-  if it's selected. Format for items: (cons text selectd?)"
+if it's selected. Format for items: (cons text selectd?)"
   (destructuring-bind (x . y) (window-size window)
     (iter
       (for item in items)
