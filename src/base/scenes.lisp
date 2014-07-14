@@ -56,20 +56,15 @@
 
 (defun game-scene (game)
   "Game step. Draws map, PC, stuff and prompts player for action."
-  (reset-all-windows-cursor-position)
-  (print-map (game-map game))
-  (let ((map-cell (get-map-cell-top (game-map game)
-                                    (player-x (game-player game))
-                                    (player-y (game-player game)))))
-    (when (typep map-cell 'item)
-      (write map-cell :stream :minibuffer)))
-  (write (game-player game) :stream :info-window)
-  (write (game-player game) :stream :game-window)
+  (with-slots (display-character location) (game-player game)
+    (destructuring-bind (x y) location
+      #+nil
+      (let ((map-cell (get-map-cell-top (game-map game) x y)))
+        (when (typep map-cell 'Item)
+          (put-text 'minibuffer 1 1 map-cell)))
+      (put-char 'game-map x y display-character)))
   (redraw-screen)
-  (process-key (wait-for-key)
-               (game-player game)
-               (game-map game))
-  (clear-screen))
+  (process-key (wait-for-key) game))
 
 (defun menu-scene ()
   ;; (display-center-menu )

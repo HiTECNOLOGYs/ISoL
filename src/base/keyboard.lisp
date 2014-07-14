@@ -4,10 +4,8 @@
   "Contains bindings of keys to some actions.")
 
 (defun key-binding (key)
-  "Returns function binded to given key (CODE-CHAR is used to transform
-character to key number for storage, key should already be number)"
-  (declare (type fixnum key))
-  (gethash key *keys))
+  "Returns function binded to given key."
+  (gethash key *keys*))
 
 (defun (setf key-binding) (function key)
   (setf (gethash (char-code key) *keys*) function))
@@ -22,9 +20,10 @@ character to key number for storage, key should already be number)"
 
 (defun process-key (key &rest arguments)
   "Runs function binded to some `key' with given arguments."
-  (awhen (key-binding (if (integerp key)
-                        key
-                        (char-code key)))
+  (awhen (key-binding (etypecase key
+                        (integer key)
+                        (character (char-code key))
+                        (symbol key)))
     (apply it arguments)))
 
 (defun wait-for-key ()

@@ -2,12 +2,11 @@
   :description "Just another roguelike RPG."
   :author "Mark Fedurin <hitecnologys@gmail.com>"
   :license "GPL v3"
-  :depends-on (:fiveam
-               :cl-charms
+  :depends-on (:cl-tui
                :cl-store
                :alexandria
-               :anaphora
-               :iterate)
+               :iterate
+               :anaphora)
   :in-order-to ((test-op (load-op :isol/tests)))
   :perform (test-op (op component)
              (asdf/package:symbol-call :fiveam :run! :isol))
@@ -23,7 +22,7 @@
                              (:file "map")
                              (:file "keyboard")
                              (:file "player")
-                             (:file "windows") ; NOT OPERATING SYSTEM
+                             (:file "frames")
                              (:file "graphics")
                              (:file "user-interaction")
                              (:file "game")
@@ -34,7 +33,8 @@
   :description "Set of unit-tests for ISoL."
   :author "Mark Fedurin <hitecnologys@gmail.com>"
   :license "GPL v3"
-  :depends-on (:fiveam :isol)
+  :depends-on (:fiveam
+               :isol)
   :pathname "src/"
   :serial t
   :components ((:file "packages")

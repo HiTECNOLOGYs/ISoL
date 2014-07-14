@@ -1,8 +1,6 @@
 (defpackage :isol
   (:use :cl
-        :cl-charms
-        :fiveam
         :alexandria
-        :anaphora
-        :iterate)
+        :iterate
+        :anaphora)
   (:export :main))
