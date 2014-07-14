@@ -72,16 +72,9 @@
 
 (defun game-scene (game)
   "Game step. Draws map, PC, stuff and prompts player for action."
-  (with-slots (display-character location) (game-player game)
-    (destructuring-bind (x y) location
-      #+nil
-      (let ((map-cell (get-map-cell-top (game-map game) x y)))
-        (when (typep map-cell 'Item)
-          (put-text 'minibuffer 1 1 map-cell)))
-      (put-char 'game-map x y display-character)))
   (redraw-screen)
   (process-key (wait-for-key) game))
 
 (defun menu-scene ()
-  ;; (display-center-menu )
+  ;; Display menu here
   )

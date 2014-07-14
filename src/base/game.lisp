@@ -16,7 +16,9 @@
               :initform (make-hash-table)
               :accessor game-creatures)
    (scenes :initform nil
-           :accessor game-scenes))
+           :accessor game-scenes)
+   (log :initform nil
+        :accessor game-log))
   (:documentation "Stores necessary info about current game."))
 
 (defun make-game (&rest initargs)

@@ -64,6 +64,22 @@
   (draw-map 'game-map (game-map *game*))
   (draw-player 'game-map (game-player *game*)))
 
-(defun game-info-callback (&key frame h w)
+(defun player-info-callback (&key frame h w)
   (cl-tui:draw-box frame)
-  (draw-player-info 'game-info (game-player *game*)))
+  (draw-player-info 'player-info (game-player *game*)))
+
+(defun minibuffer-callback (&key frame h w)
+  (cl-tui:draw-box frame)
+  (with-slots (map player) *game*
+    (destructuring-bind (x y) (location player)
+      (let ((map-cell (get-map-cell-top map x y)))
+        (when (typep map-cell 'Item)
+          (put-text frame 1 1 "~A is lying here." (name map-cell)))))))
+
+(defun game-log-callback (&key frame h w)
+  (cl-tui:draw-box frame)
+  ;; Display last log entries here.
+  ;; This log is the only thing besides minibuffer that can thell player what
+  ;; the hell is going on. I should probably do some kind of text colorizing
+  ;; and stuff here to make it more informative.
+  )
