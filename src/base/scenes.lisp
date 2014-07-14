@@ -5,50 +5,66 @@
 ;;; *********************************************************************
 
 (defclass Scene ()
-  ((windows :initarg windows
-            :initform nil
-            :accessor scene-windows)
+  ((frame :initarg frame
+          :initform :root
+          :accessor scene-frame)
    (keybindings :initarg :keybindings
+                :initform *keys*
                 :accessor scene-keybindings)
    (variables :initarg :variables
+              :initform nil
               :accessor scene-variables)
-   (function :initarg :function
-             :accessor scene-function))
+   (dispatcher :initarg :dispatcher
+               :accessor scene-dispatcher))
   (:documentation "Stores information about current scene."))
 
 (defun make-scene (function
-                   &key (windows nil windows-given?)
+                   &key (frame nil frame-given?)
                         (keybindings nil keybindings-given?)
                         (variables nil variables-given?))
-  (let ((scene (make-instance 'Scene :function function)))
-    (when windows-given?
-      (setf (scene-windows scene) windows))
+  (let ((scene (make-instance 'Scene :dispatcher function)))
+    (when frame-given?
+      (setf (scene-frame scene) frame))
     (when keybindings-given?
-      (setf (scene-keybindings scene) keybindings))
+      (setf (scene-keybindings scene)
+            (etypecase keybindings
+              (list (alist-hash-table keybindings))
+              (hash-table keybindings))))
     (when variables-given?
-      (setf (scene-variables scene) variables))
+      (let ((additional-variables (mapcar #'first variables))
+            (additional-variables-values (mapcar #'second variables)))
+        (setf (scene-variables scene)
+              (list additional-variables
+                    additional-variables-values))))
     scene))
 
-(defgeneric game-current-scene (object))
-(defmethod game-current-scene ((game Game))
-  (car (game-scenes game)))
+(defgeneric game-current-scene (object)
+  (:method ((object Game))
+    (car (game-scenes object))))
 
-(defgeneric push-scene (scene object))
-(defmethod push-scene ((scene Scene) (game Game))
-  (push scene (game-scenes game)))
+(defgeneric push-scene (scene object)
+  (:method ((scene Scene) (object Game))
+    (push scene (game-scenes object))
+    (display (scene-frame scene))
+    scene))
 
-(defgeneric pop-scene (object))
-(defmethod pop-scene ((game Game))
-  (pop (game-scenes game)))
+(defgeneric pop-scene (object)
+  (:method ((object Game))
+    (pop (game-scenes object))))
 
-(defgeneric run-scene (object))
-(defmethod run-scene ((scene Scene))
-  (when (slot-boundp scene 'function)
-    (funcall (scene-function scene))))
+(defgeneric run-scene (object)
+  (:method ((scene Scene))
+    (when (slot-boundp scene 'dispatcher)
+      (funcall (scene-dispatcher scene))))
+  (:method :around ((scene Scene))
+    (with-slots (keybindings variables) scene
+      (let ((*keys* keybindings))
+        (progv (first variables) (second variables)
+          (call-next-method))))))
 
-(defgeneric game-tick (object))
-(defmethod game-tick ((game Game))
-  (run-scene (game-current-scene game)))
+(defgeneric game-tick (object)
+  (:method ((game Game))
+    (run-scene (game-current-scene game))))
 
 ;;; *********************************************************************
 ;;; Scenes dispatchers
@@ -56,21 +72,9 @@
 
 (defun game-scene (game)
   "Game step. Draws map, PC, stuff and prompts player for action."
-  (reset-all-windows-cursor-position)
-  (print-map (game-map game))
-  (let ((map-cell (get-map-cell-top (game-map game)
-                                    (player-x (game-player game))
-                                    (player-y (game-player game)))))
-    (when (typep map-cell 'item)
-      (write map-cell :stream :minibuffer)))
-  (write (game-player game) :stream :info-window)
-  (write (game-player game) :stream :game-window)
   (redraw-screen)
-  (process-key (wait-for-key)
-               (game-player game)
-               (game-map game))
-  (clear-screen))
+  (process-key (wait-for-key) game))
 
 (defun menu-scene ()
-  ;; (display-center-menu )
+  ;; Display menu here
   )

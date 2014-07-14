@@ -8,34 +8,18 @@
    (max-energy :initform 10000))
   (:documentation "Player character."))
 
-(defun player-x (player)
-  (first (location player)))
-
-(defun (setf player-x) (new-value player)
-  (setf (first (location player)) new-value))
-
-(defun player-y (player)
-  (second (location player)))
-
-(defun (setf player-y) (new-value player)
-  (setf (second (location player)) new-value))
-
 (defmethod move-creature ((player Player) map x y)
-  (when (map-cell-passable-p map (+ (player-x player) x) (+ (player-y player) y))
-    (incf (player-x player) x)
-    (incf (player-y player) y)
-    (list (player-x player) (player-y player))))
+  (when (map-cell-passable-p map (+ (object-x player) x) (+ (object-y player) y))
+    (incf (object-x player) x)
+    (incf (object-y player) y)
+    (list (object-x player) (object-y player))))
 
 (defmethod pick-up-object ((player Player) map)
-  (destructuring-bind (player-x player-y) (location player)
-    (when (takable-p (get-map-cell-top map player-x player-y))
+  (destructuring-bind (object-x object-y) (location player)
+    (when (takable-p (get-map-cell-top map object-x object-y))
       (push (cons (length (inventory player))
-                  (pop-object map player-x player-y))
+                  (pop-object map object-x object-y))
             (inventory player)))))
-
-(defmethod print-object ((player Player) (stream (eql :game-window)))
-  (destructuring-bind (player-x player-y) (location player)
-    (draw-char-at :game-window (display-character player) player-x player-y)))
 
 (defmacro define-encoder (name divisor &body values)
   "Defines function which returns values based on how close to maximum some
@@ -107,32 +91,38 @@ maximum-value."
   (4    "You can't stay awake")
         "You're completely exhausted")
 
-(defmethod print-object ((player Player) (stream (eql :info-window)))
-  (mapc (curry #'wprintw-newline-limited :info-window +info-window-size+)
-        (append (list (encode-hp (hp player) (max-hp player))
-                      (encode-wp (wp player) (max-wp player))
-                      (encode-hunger (hunger player) (max-hunger player))
-                      (encode-thirst (thirst player) (max-thirst player))
-                      (encode-energy (energy player) (max-energy player))
-                      ""
-                      "Inventory:"
-                      "---")
-                (mapcar #'(lambda (item)
-                            (format nil "[~D] ~A"
-                                    (car item)
-                                    (name (cdr item))))
-                        (inventory player)))))
+(defun player-info (player)
+  (list* (encode-hp (hp player) (max-hp player))
+         (encode-wp (wp player) (max-wp player))
+         (encode-hunger (hunger player) (max-hunger player))
+         (encode-thirst (thirst player) (max-thirst player))
+         (encode-energy (energy player) (max-energy player))
+         ""
+         "Inventory:"
+         "---"
+         (mapcar #'(lambda (item)
+                     (format nil "[~D] ~A"
+                             (car item)
+                             (name (cdr item))))
+                 (inventory player))))
 
-(define-key-processor #\j ()
+(defmacro define-player-key (char &body body)
+  `(bind-key ,char
+             #'(lambda (game)
+                 (with-slots (player map) game
+                   ,@body))))
+
+(define-player-key #\j
   (move-creature player map 0 1))
 
-(define-key-processor #\k ()
+(define-player-key #\k
   (move-creature player map 0 -1))
 
-(define-key-processor #\h ()
+(define-player-key #\h
   (move-creature player map -1 0))
 
-(define-key-processor #\l ()
+(define-player-key #\l
   (move-creature player map 1 0))
 
-(define-key-binding #\; #'pick-up-object)
+(define-player-key #\;
+  (pick-up-object player map))

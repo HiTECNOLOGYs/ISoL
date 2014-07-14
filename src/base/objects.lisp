@@ -87,3 +87,16 @@
 
 (defmethod display-character ((object (eql nil)))
   #\Space)
+
+
+(defun object-x (object)
+  (first (location object)))
+
+(defun object-y (object)
+  (second (location object)))
+
+(defun (setf object-x) (new-value object)
+  (setf (first (location object)) new-value))
+
+(defun (setf object-y) (new-value object)
+  (setf (second (location object)) new-value))
