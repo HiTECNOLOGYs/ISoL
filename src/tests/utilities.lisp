@@ -17,9 +17,11 @@
 
 (in-package :isol)
 
-(define-constant +test-map-path+ (make-pathname :directory '(:relative "res")
-                                                :name "test-map"
-                                                :type "isol"))
+(define-constant +test-map-path+ (merge-pathnames
+                                   (make-pathname :directory '(:relative "res")
+                                                  :name "test-map"
+                                                  :type "isol")
+                                   #.(or *compile-file-truename* *load-truename*)))
 
 (defmacro with-test-map ((map-variable) &body body)
   `(let ((,map-variable (load-map-from-file +test-map-path+)))

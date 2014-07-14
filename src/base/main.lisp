@@ -27,9 +27,11 @@
 (defun run-game (game)
   "Runs game."
   (push-scene (make-scene (curry #'game-scene game)) game)
-  (setf (game-map game) (load-map-from-file (make-pathname :directory '(:relative "res")
-                                                           :name "test-map"
-                                                           :type "isol")))
+  (setf (game-map game) (load-map-from-file (merge-pathnames
+                                              (make-pathname :directory '(:relative "res")
+                                                             :name "test-map"
+                                                             :type "isol")
+                                              (or *compile-file-truename* *load-truename*))))
   (push-object (game-map game) 2 2 (get-object-instance-from-symbol :gun))
   (push-object (game-map game) 3 13 (get-object-instance-from-symbol :rock))
   (push-object (game-map game) 1 9 (get-object-instance-from-symbol :knife))
