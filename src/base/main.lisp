@@ -24,6 +24,8 @@
   (declare (ignore game))
   (throw 'exit-game (values)))
 
+(bind-key #\q #'exit-game)
+
 (defun no-way ()
   (put-text :root 0 0 "To play ISoL you need at least 40 rows and 80 columns in your terminal, sorry. To quit press ^C.")
   (take-a-nap))
@@ -37,7 +39,7 @@
   (catch 'exit-game
     (handler-case
       (cl-tui:with-screen (:noecho :nocursor :cbreak)
-        (redraw-screen)
+        (display-scene (game-current-scene *game*))
         (unless (screen-size-sufficient-p)
           (no-way))
         (log-game-message *game* "Welcome to ISoL ~A" *game-version*)
@@ -50,8 +52,9 @@
   (let* ((game (new-game :map (gen-new-map :testing)))
          (game-version (asdf:component-version (asdf:find-system :isol)))
          (scene (make-scene #'game-scene
-                            :keybindings '((#\q exit-game))
+                            :frame 'game-scene
                             :variables `((*game* ,game)
                                          (*game-version* ,game-version)))))
     (push-scene scene game)
-    (run-game)))
+    (progv '(*game* *game-version*) `(,game ,game-version)
+      (run-game))))

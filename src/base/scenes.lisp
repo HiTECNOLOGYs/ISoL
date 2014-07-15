@@ -22,12 +22,9 @@
 ;;; *********************************************************************
 
 (defclass Scene ()
-  ((frame :initarg frame
+  ((frame :initarg :frame
           :initform :root
           :accessor scene-frame)
-   (keybindings :initarg :keybindings
-                :initform *keys*
-                :accessor scene-keybindings)
    (variables :initarg :variables
               :initform nil
               :accessor scene-variables)
@@ -37,16 +34,17 @@
 
 (defun make-scene (function
                    &key (frame nil frame-given?)
-                        (keybindings nil keybindings-given?)
+                        (keybindings *keys* keybindings-given?)
                         (variables nil variables-given?))
   (let ((scene (make-instance 'Scene :dispatcher function)))
     (when frame-given?
       (setf (scene-frame scene) frame))
     (when keybindings-given?
-      (setf (scene-keybindings scene)
-            (etypecase keybindings
-              (list (alist-hash-table keybindings))
-              (hash-table keybindings))))
+      (push (list '*keys*
+                  (etypecase keybindings
+                    (list (alist-hash-table keybindings))
+                    (hash-table keybindings)))
+            variables))
     (when variables-given?
       (let ((additional-variables (mapcar #'first variables))
             (additional-variables-values (mapcar #'second variables)))
@@ -62,8 +60,11 @@
 (defgeneric push-scene (scene object)
   (:method ((scene Scene) (object Game))
     (push scene (game-scenes object))
-    (display (scene-frame scene))
     scene))
+
+(defgeneric display-scene (scene)
+  (:method ((scene Scene))
+    (display (scene-frame scene))))
 
 (defgeneric pop-scene (object)
   (:method ((object Game))
@@ -75,9 +76,8 @@
       (funcall (scene-dispatcher scene))))
   (:method :around ((scene Scene))
     (with-slots (keybindings variables) scene
-      (let ((*keys* keybindings))
-        (progv (first variables) (second variables)
-          (call-next-method))))))
+      (progv (first variables) (second variables)
+        (call-next-method)))))
 
 (defgeneric game-tick (object)
   (:method ((game Game))

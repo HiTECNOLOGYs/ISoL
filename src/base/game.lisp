@@ -55,6 +55,6 @@
 ;;;  Various game manipulation functions. Those a pretty low-level, though
 ;;; **************************************************************************
 
-(defun log-game-message (game format-string &optional format-args)
+(defun log-game-message (game format-string &rest format-args)
   (push (apply #'format nil format-string format-args)
         (game-log game)))
