@@ -37,9 +37,12 @@ Make sure you cd into project's dir. My code it bad, it can't handle other cases
 Controls
 ---------
 
-  y k u
- h     l  -- movement
-  b j n
+```
+ y k u
+h     l  — movement
+ b j n
+```
 
- ;  -- pick object
-
+```
+;  — pick object
+```
