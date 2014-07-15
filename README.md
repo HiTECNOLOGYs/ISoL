@@ -46,3 +46,7 @@ h     l  — movement
 ```
 ;  — pick object
 ```
+
+```
+q, ^C  — quit
+```
