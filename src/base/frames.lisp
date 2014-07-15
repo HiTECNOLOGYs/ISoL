@@ -57,7 +57,7 @@
 (cl-tui:define-frame minibuffer (cl-tui:callback-frame
                                   :render 'minibuffer-callback)
                      :on game-process
-                     :h 3)
+                     :h 1)
 
 (cl-tui:define-frame game-map (cl-tui:callback-frame
                                 :render 'game-map-callback)

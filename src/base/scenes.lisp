@@ -87,10 +87,10 @@
 ;;; Scenes dispatchers
 ;;; *********************************************************************
 
-(defun game-scene (game)
+(defun game-scene ()
   "Game step. Draws map, PC, stuff and prompts player for action."
   (redraw-screen)
-  (process-key (wait-for-key) game))
+  (process-key (wait-for-key) *game*))
 
 (defun menu-scene ()
   ;; Display menu here

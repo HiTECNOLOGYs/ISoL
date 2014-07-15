@@ -33,7 +33,7 @@
 
 (defmethod pick-up-object ((player Player) map)
   (destructuring-bind (object-x object-y) (location player)
-    (when (takable-p (get-map-cell-top map object-x object-y))
+    (when (takable-p (map-cell-top map object-x object-y))
       (push (cons (length (inventory player))
                   (pop-object map object-x object-y))
             (inventory player)))))

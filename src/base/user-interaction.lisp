@@ -17,6 +17,7 @@
 
 (in-package :isol)
 
+#+nil
 (defun display-message-in-minibuffer (string)
   "Displays message in minibuffer until palyer moves."
   (let ((max-length (- (car *screen-size*) 2)))
@@ -30,6 +31,7 @@
       (loop until (= (char-code #\Space) (wait-for-key)))
       (display-message-in-minibuffer (subseq string max-length)))))
 
+#+nil
 (defun prompt-input (string choices)
   "Prompts user for a choice. `choices' are list of (CHAR RESULT)."
   (clear-window-id :minibuffer)
@@ -41,6 +43,7 @@
 
 ;;; TODO Rewrite the whole menu code cause it's awful. Also, make use of
 ;;;      scenes.
+#+nil
 (defun draw-center-menu (window items)
   "Draws some lines at the center of some window and highlights line
 if it's selected. Format for items: (cons text selectd?)"
@@ -57,6 +60,7 @@ if it's selected. Format for items: (cons text selectd?)"
               (mvwprintw (or (window-ref window) *stdscr*) print-y print-x item-text))
             (mvprintw print-y print-x item-text)))))))
 
+#+nil
 (defun display-center-menu (window-id &rest items)
   "Displays menu where player can choise something by moving cursor up and down."
   (let ((selected-item 0))

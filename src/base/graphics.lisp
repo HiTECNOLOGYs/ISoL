@@ -56,47 +56,45 @@
 (defun draw-map (frame map)
   (iter
     (for line in (render-map map))
-    (for y from 1)
+    (for y from 0)
     (after-each
       (iter
         (for char in line)
-        (for x from 1)
+        (for x from 0)
         (after-each
           (cl-tui:put-char frame y x char))))))
 
 (defun draw-player (frame player)
   (with-slots (display-character location) player
     (destructuring-bind (x y) location
-      (put-char frame (1+ x) (1+ y) display-character))))
+      (put-char frame x y display-character))))
 
 (defun draw-player-info (frame player)
   (iter
     (for line in (player-info player))
-    (for y from 1)
+    (for y from 0)
     (after-each
-      (put-text frame 1 y line))))
+      (put-text frame 0 y line))))
 
-(defun game-map-callback (&key frame h w)
-  (cl-tui:draw-box frame)
-  (draw-map 'game-map (game-map *game*))
-  (draw-player 'game-map (game-player *game*)))
+(defun game-map-callback (&key frame)
+  (draw-map frame (game-map *game*))
+  (draw-player frame (game-player *game*)))
 
-(defun player-info-callback (&key frame h w)
-  (cl-tui:draw-box frame)
-  (draw-player-info 'player-info (game-player *game*)))
+(defun player-info-callback (&key frame)
+  (draw-player-info frame (game-player *game*)))
 
-(defun minibuffer-callback (&key frame h w)
-  (cl-tui:draw-box frame)
+(defun minibuffer-callback (&key frame)
   (with-slots (map player) *game*
     (destructuring-bind (x y) (location player)
-      (let ((map-cell (get-map-cell-top map x y)))
+      (let ((map-cell (map-cell-top map x y)))
         (when (typep map-cell 'Item)
-          (put-text frame 1 1 "~A is lying here." (name map-cell)))))))
+          (put-text frame 0 0 "~A is lying here." (name map-cell)))))))
 
-(defun game-log-callback (&key frame h w)
-  (cl-tui:draw-box frame)
-  ;; Display last log entries here.
-  ;; This log is the only thing besides minibuffer that can thell player what
-  ;; the hell is going on. I should probably do some kind of text colorizing
-  ;; and stuff here to make it more informative.
-  )
+(defun game-log-callback (&key frame h)
+  (loop
+    for message in (first-n *log-backtrack-n* (game-log *game*))
+    with y = 0
+    do
+    (when message
+      (incf y)
+      (put-text frame 0 y (ensure-string-within-length h message)))))

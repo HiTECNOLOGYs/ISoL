@@ -17,11 +17,12 @@
 
 (in-package :isol)
 
-(define-constant +info-window-size+ 40
-  :test #'=)
-(define-constant +minibuffer-size+ 2
-  :test #'=)
-(defparameter *screen-size* nil)
+(defparameter *log-backtrack-n* 5
+  "Number of displayed log messages from the end of log.")
+
+;;; **************************************************************************
+;;;  Game object. Creating, saving, loading game state
+;;; **************************************************************************
 
 (defclass Game ()
   ((map :initarg :map
@@ -38,6 +39,22 @@
         :accessor game-log))
   (:documentation "Stores necessary info about current game."))
 
-(defun make-game (&rest initargs)
+(defun save-game (game pathname)
+  "Stores game to file."
+  (cl-store:store game pathname))
+
+(defun load-game (pathname)
+  "Restores game from file and returns it."
+  (cl-store:restore pathname))
+
+(defun new-game (&rest initargs)
   (apply #'make-instance 'Game
          initargs))
+
+;;; **************************************************************************
+;;;  Various game manipulation functions. Those a pretty low-level, though
+;;; **************************************************************************
+
+(defun log-game-message (game format-string &optional format-args)
+  (push (apply #'format nil format-string format-args)
+        (game-log game)))

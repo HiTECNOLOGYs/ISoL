@@ -34,10 +34,10 @@
                (:file "utilities")
                (:module base
                 :serial t
-                :components ((:file "utilities")
-                             (:file "objects")
+                :components ((:file "objects")
                              (:file "items")
                              (:file "map")
+                             (:file "map-generation")
                              (:file "keyboard")
                              (:file "player")
                              (:file "frames")
