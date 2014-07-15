@@ -37,9 +37,9 @@ Make sure you cd into project's dir. My code it bad, it can't handle other cases
 Controls
 ---------
 
-    k
+  y k u
  h     l  -- movement
-    j
+  b j n
 
  ;  -- pick object
 

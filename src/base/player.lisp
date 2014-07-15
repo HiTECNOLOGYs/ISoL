@@ -141,5 +141,17 @@ maximum-value."
 (define-player-key #\l
   (move-creature player map 1 0))
 
+(define-player-key #\y
+  (move-creature player map -1 -1))
+
+(define-player-key #\u
+  (move-creature player map 1 -1))
+
+(define-player-key #\b
+  (move-creature player map -1 1))
+
+(define-player-key #\n
+  (move-creature player map 1 1))
+
 (define-player-key #\;
   (pick-up-object player map))
