@@ -17,18 +17,5 @@
 
 (in-package :isol)
 
-(define-constant +test-map-path+ (merge-pathnames
-                                   (make-pathname :directory '(:relative "res")
-                                                  :name "test-map"
-                                                  :type "isol")
-                                   #.(or *compile-file-truename* *load-truename*)))
-
-(defmacro with-test-map ((map-variable) &body body)
-  `(let ((,map-variable (load-map-from-file +test-map-path+)))
-     ,@body))
-
-(defmacro with-test-rendered-map ((variable) &body body)
-  (let ((map-variable (gensym)))
-    `(with-test-map (,map-variable)
-       (let ((,variable (render-map ,map-variable)))
-         ,@body))))
+(defun gen-integer (&key (max (1+ most-positive-fixnum)) (min (1- most-negative-fixnum)))
+  (+ min (random (1+ (- max min)))))

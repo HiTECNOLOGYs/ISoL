@@ -91,13 +91,16 @@ some values preinitialized when called."
 
 (defun gen-new-map (type)
   (ecase type
-    (:testing
-      (gen-testing-map))))
+    (:testing (gen-testing-map))
+    (:empty (gen-empty-map))))
+
+(defun gen-empty-map ()
+  (make-array (list 10 10)
+              :initial-element nil))
 
 (defun gen-testing-map ()
   ;;; Generating sample map here for debugging purposes
-  (let ((map (make-array (list 10 10)
-                         :initial-element nil)))
+  (let ((map (gen-empty-map)))
     (push-object map 2 2
                  (get-object-instance-from-symbol :gun))
     map))
