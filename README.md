@@ -48,5 +48,13 @@ h     l  — movement
 ```
 
 ```
+i  — display inventory menu
+```
+
+```
+q  — close any menu
+```
+
+```
 q, ^C  — quit
 ```
