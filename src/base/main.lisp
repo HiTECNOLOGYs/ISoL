@@ -24,37 +24,37 @@
   (declare (ignore game))
   (throw 'exit-game (values)))
 
-(bind-key #\q #'exit-game)
+(bind-key #\q 'exit-game)
 
 (defun no-way ()
   (put-text :root 0 0 "To play ISoL you need at least 40 rows and 80 columns in your terminal, sorry. To quit press ^C.")
   (take-a-nap))
 
-(defun game-loop ()
- (loop (game-tick *game*)
+(defun game-loop (game)
+ (loop (game-tick game)
        (sleep 1/100)))
 
-(defun run-game ()
+(defun run-game (game game-version)
   "Runs game."
   (catch 'exit-game
     (handler-case
       (cl-tui:with-screen (:noecho :nocursor :cbreak)
-        (display-scene (game-current-scene *game*))
+        (progv '(*game*) (list game)
+          (display-scene (game-current-scene game)))
         (unless (screen-size-sufficient-p)
           (no-way))
-        (log-game-message *game* "Welcome to ISoL ~A" *game-version*)
-        (game-loop))
+        (log-game-message game "Welcome to ISoL ~A" game-version)
+        (game-loop game))
       (sb-sys:interactive-interrupt ()
-        (exit-game *game*)))))
+        (exit-game game)))))
 
 (defun main ()
   "Start point."
   (let* ((game (new-game :map (gen-new-map :testing)))
          (game-version (asdf:component-version (asdf:find-system :isol)))
-         (scene (make-scene #'game-scene
+         (scene (make-scene 'game-scene
                             :frame 'game-scene
                             :variables `((*game* ,game)
                                          (*game-version* ,game-version)))))
     (push-scene scene game)
-    (progv '(*game* *game-version*) `(,game ,game-version)
-      (run-game))))
+    (run-game game game-version)))
