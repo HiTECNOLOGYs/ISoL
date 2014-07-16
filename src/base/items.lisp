@@ -17,6 +17,13 @@
 
 (in-package :isol)
 
+;;; **************************************************************************
+;;;  Base
+;;; **************************************************************************
+
+;; ----------------
+;; Classes
+
 (defclass Item (Object)
   ((display-character :initform #\?)
    (takable? :initform t)
@@ -58,6 +65,8 @@
           :accessor items))
   (:documentation "This is like additional inventory. Main indevtory is limited in size so this stuff cound be very useful.")) 
 
+;; ----------------
+;; Generic functions
 
 (defgeneric use-object (creature map item)
   (:documentation "Called each time item is used by creature."))

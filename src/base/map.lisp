@@ -18,26 +18,6 @@
 (in-package :isol)
 
 ;;; **************************************************************************
-;;;  Basic elements
-;;; **************************************************************************
-
-(defclass Map-Object (Object)
-  ((display-character :initform #\&)
-   (takable? :initform nil)
-   (movable? :initarg :movable?
-             :accessor movable-p))
-  (:documentation "Object whcih may not be fixed on map, may be even
-'transparent' for player motions.  But it is always untakable.
-Destructuable, though, like any other piece of map."))
-
-(defclass Map-Element (Object)
-  ((display-character :initform #\#)
-   (takable? :initform nil)
-   (passable? :initform nil))
-  (:documentation "Object on map which is not movable as it is a part of world.
-May be destroyed by creatures."))
-
-;;; **************************************************************************
 ;;;  Rendering map
 ;;; **************************************************************************
 
