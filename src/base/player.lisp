@@ -25,25 +25,15 @@
    (max-energy :initform 10000))
   (:documentation "Player character."))
 
-(defmethod move-creature ((player Player) map x y)
-  (when (map-cell-passable-p map (+ (object-x player) x) (+ (object-y player) y))
-    (incf (object-x player) x)
-    (incf (object-y player) y)
-    (list (object-x player) (object-y player))))
-
-(defmethod pick-up-object ((player Player) map)
-  (destructuring-bind (object-x object-y) (location player)
-    (when (takable-p (map-cell-top map object-x object-y))
-      (push (cons (length (inventory player))
-                  (pop-object map object-x object-y))
-            (inventory player)))))
+;;; **************************************************************************
+;;;  Info
+;;; **************************************************************************
 
 (defmacro define-encoder (name divisor &body values)
   "Defines function which returns values based on how close to maximum some
 creature's parameter is. Resulting function accepts two arguments: value,
 maximum-value."
-  (let ((delta-gensym (gensym))
-        (quarter-gensym (gensym)))
+  (with-gensyms (delta-gensym quarter-gensym)
     `(defun ,(symbol-append 'encode- name) (value max-value)
        (let ((,delta-gensym (- max-value value))
              (,quarter-gensym (/ max-value ,divisor)))
@@ -109,19 +99,21 @@ maximum-value."
         "You're completely exhausted")
 
 (defun player-info (player)
-  (list* (encode-hp (hp player) (max-hp player))
-         (encode-wp (wp player) (max-wp player))
-         (encode-hunger (hunger player) (max-hunger player))
-         (encode-thirst (thirst player) (max-thirst player))
-         (encode-energy (energy player) (max-energy player))
-         ""
-         "Inventory:"
-         "---"
-         (mapcar #'(lambda (item)
-                     (format nil "[~D] ~A"
-                             (car item)
-                             (name (cdr item))))
-                 (inventory player))))
+  (list (encode-hp (hp player) (max-hp player))
+        (encode-wp (wp player) (max-wp player))
+        (encode-hunger (hunger player) (max-hunger player))
+        (encode-thirst (thirst player) (max-thirst player))
+        (encode-energy (energy player) (max-energy player))))
+
+;;; **************************************************************************
+;;;  Movement
+;;; **************************************************************************
+
+(defmethod move-creature ((player Player) map x y)
+  (when (map-cell-passable-p map (+ (object-x player) x) (+ (object-y player) y))
+    (incf (object-x player) x)
+    (incf (object-y player) y)
+    (list (object-x player) (object-y player))))
 
 (defmacro define-player-key (char &body body)
   `(bind-key ,char
@@ -152,6 +144,16 @@ maximum-value."
 
 (define-player-key #\n
   (move-creature player map 1 1))
+
+;;; **************************************************************************
+;;;  Other objects manipulations
+;;; **************************************************************************
+
+(defmethod pick-up-object ((player Player) map)
+  (destructuring-bind (x y) (location player)
+    (when (takable-p (map-cell-top map x y))
+      (push (pop-object map x y)
+            (inventory player)))))
 
 (define-player-key #\;
   (pick-up-object player map))
