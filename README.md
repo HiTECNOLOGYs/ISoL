@@ -31,7 +31,14 @@ ISoL.  If not, see <http://www.gnu.org/licenses/>.
 Running
 --------
 
-Make sure you cd into project's dir. My code it bad, it can't handle other cases.
+Load project with ASDF by executing standard
+```lisp
+(asdf:load-system :isol)
+```
+and then run MAIN in ISOL package.
+```lisp
+(isol:main)
+```
 
 
 Controls
