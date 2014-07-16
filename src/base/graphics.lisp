@@ -49,9 +49,17 @@
 (defun put-char (frame x y char)
   (cl-tui:put-char frame y x char))
 
+(defun display-message-in-minibuffer (format-string &rest format-args)
+  (let ((minibuffer-width (second (cl-tui:frame-size (cl-tui:frame 'minibuffer))))
+        (string (apply #'format nil format-string format-args)))
+    (put-text 'minibuffer 0 0 (ensure-string-within-length minibuffer-width string))))
+
 ;;; **************************************************************************
 ;;;  Callbacks
 ;;; **************************************************************************
+
+;; ----------------
+;; Helper functions
 
 (defun draw-map (frame map)
   (iter
@@ -76,19 +84,15 @@
     (after-each
       (put-text frame 0 y line))))
 
+;; ----------------
+;; Callbacks
+
 (defun game-map-callback (&key frame)
   (draw-map frame (game-map *game*))
   (draw-player frame (game-player *game*)))
 
 (defun player-info-callback (&key frame)
   (draw-player-info frame (game-player *game*)))
-
-(defun minibuffer-callback (&key frame)
-  (with-slots (map player) *game*
-    (destructuring-bind (x y) (location player)
-      (let ((map-cell (map-cell-top map x y)))
-        (when (typep map-cell 'Item)
-          (put-text frame 0 0 "~A is lying here." (name map-cell)))))))
 
 (defun game-log-callback (&key frame h)
   (loop
@@ -98,3 +102,11 @@
     (when message
       (incf y)
       (put-text frame 0 y (ensure-string-within-length h message)))))
+
+(defun items-callback (&key frame)
+  (iter
+    (for item in (inventory (game-player *game*)))
+    (for i from 0)
+    (after-each
+      ;; x = 1 is just for small nice padding, it's temporary
+      (put-text frame 1 i "[~D] ~A" i (name item)))))

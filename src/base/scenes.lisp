@@ -40,11 +40,12 @@
     (when frame-given?
       (setf (scene-frame scene) frame))
     (when keybindings-given?
-      (push (list '*keys*
-                  (etypecase keybindings
-                    (list (alist-hash-table keybindings))
-                    (hash-table keybindings)))
-            variables))
+      (let ((*keys* (make-hash-table)))
+        (iter
+          (for (key binding) in keybindings)
+          (after-each
+            (bind-key key binding)))
+        (push (list '*keys* *keys*) variables)))
     (when variables-given?
       (let ((additional-variables (mapcar #'first variables))
             (additional-variables-values (mapcar #'second variables)))
@@ -89,9 +90,20 @@
 
 (defun game-scene ()
   "Game step. Draws map, PC, stuff and prompts player for action."
+  ;; Displaying info about stuff lying on the floor.
+  (with-slots (map player) *game*
+    (destructuring-bind (x y) (location player)
+      (let ((map-cell (map-cell-top map x y)))
+        (when (typep map-cell 'Item)
+          (display-message-in-minibuffer "~A is lying here." (name map-cell))))))
   (redraw-screen)
-  (process-key (wait-for-key) *game*))
+  (process-key (wait-for-key) *game*)
+  (cl-tui:clear 'minibuffer))
 
 (defun menu-scene ()
-  ;; Display menu here
+  ;; Handle menu here
   )
+
+(defun inventory-scene ()
+  (redraw-screen)
+  (process-key (wait-for-key) *game*))

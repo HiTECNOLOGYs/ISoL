@@ -54,8 +54,7 @@
                                     :split-type :horizontal)
                      :on game-scene)
 
-(cl-tui:define-frame minibuffer (cl-tui:callback-frame
-                                  :render 'minibuffer-callback)
+(cl-tui:define-frame minibuffer (cl-tui:retained-frame)
                      :on game-process
                      :h 1)
 
@@ -67,6 +66,9 @@
 ;;;  Inventory menu
 ;;; **************************************************************************
 
+(cl-tui:define-frame items (cl-tui:callback-frame
+                             :render 'items-callback)
+                     :on inventory-menu)
 
 ;;; **************************************************************************
 ;;;  Player menu

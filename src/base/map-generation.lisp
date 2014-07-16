@@ -96,5 +96,8 @@ some values preinitialized when called."
 
 (defun gen-testing-map ()
   ;;; Generating sample map here for debugging purposes
-  (make-array (list 10 10)
-              :initial-element nil))
+  (let ((map (make-array (list 10 10)
+                         :initial-element nil)))
+    (push-object map 2 2
+                 (get-object-instance-from-symbol :gun))
+    map))

@@ -146,14 +146,40 @@ maximum-value."
   (move-creature player map 1 1))
 
 ;;; **************************************************************************
+;;;  Inventory
+;;; **************************************************************************
+
+(defun close-inventory (game)
+  (pop-scene game)
+  (display-scene (game-current-scene game)))
+
+(defun open-inventory (game)
+  (let ((scene (make-scene 'inventory-scene
+                           :frame 'inventory-menu
+                           :keybindings '((#\q close-inventory)
+                                          (#\< inventory-previous-tab)
+                                          (#\> inventory-next-tab)
+                                          (#\j inventory-selection-down)
+                                          (#\k inventory-selection-up)
+                                          (#\h inventory-selection-left)
+                                          (#\l inventory-selection-right)
+                                          (#\Newline inventory-confirm-selection))
+                           :variables `((*game* ,game)
+                                        (*game-version* ,*game-version*)))))
+    (display-scene (push-scene scene game))))
+
+;;; **************************************************************************
 ;;;  Other objects manipulations
 ;;; **************************************************************************
 
 (defmethod pick-up-object ((player Player) map)
   (destructuring-bind (x y) (location player)
-    (when (takable-p (map-cell-top map x y))
-      (push (pop-object map x y)
-            (inventory player)))))
+    (awhen (map-cell-top map x y)
+      (when (takable-p it)
+        (push (pop-object map x y)
+              (inventory player))))))
 
 (define-player-key #\;
   (pick-up-object player map))
+
+(bind-key #\i 'open-inventory)
