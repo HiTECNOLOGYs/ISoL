@@ -53,6 +53,12 @@ Binds `x-var' to current x position and `y-var' to current y position."
        (dotimes (,x-var x-size)
          ,@body))))
 
+(defmacro doarray* ((i elt array) &body body)
+  "Iterates through `array' using ROW-MAJOR-AREF."
+  `(dotimes (,i (array-total-size ,array) ,array)
+     (symbol-macrolet ((,elt (row-major-aref ,array ,i)))
+       ,@body)))
+
 (defun symbol-append (symbol-1 symbol-2 &optional (package *package*))
   (intern (concatenate 'string
                        (symbol-name symbol-1)

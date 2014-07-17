@@ -115,6 +115,8 @@ class by given generation rules."
 (defun gen-empty-map ()
   (let ((map (make-array (list 10 10)
                          :initial-element nil)))
+    (doarray* (i cell map)
+      (push (generate-object 'Ground) cell))
     (set-map-borders map)))
 
 (defun gen-testing-map ()
