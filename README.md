@@ -31,13 +31,18 @@ ISoL.  If not, see <http://www.gnu.org/licenses/>.
 Running
 --------
 
-Load project with ASDF by executing standard
+Load project with ASDF by executing standard:
 ```lisp
 (asdf:load-system :isol)
 ```
 and then run MAIN in ISOL package.
 ```lisp
 (isol:main)
+```
+
+You might also want to run tests:
+```lisp
+(asdf:test-system :isol)
 ```
 
 
