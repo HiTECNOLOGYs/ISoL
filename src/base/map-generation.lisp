@@ -31,12 +31,13 @@
   "SETF-function for OBJECT-GENERATOR."
   (setf (gethash object-id *objects-templates*) new-value))
 
-(defun parse-object-generation-rules (class rules)
-  "Translates object generation rules to actual code that generates desired object."
-  ;; At the moment rules are treated as initargs for class.
-  `((apply #'make-instance ',class
-           ,@rules
-           parameters)))
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (defun parse-object-generation-rules (class rules)
+    "Translates object generation rules to actual code that generates desired object."
+    ;; At the moment rules are treated as initargs for class.
+    `((apply #'make-instance ',class
+             ,@rules
+             parameters))))
 
 (defmacro define-object-generator (object-id class &body body)
   "Binds some symbol to lambda which will create instances of object of given
