@@ -153,16 +153,20 @@ maximum-value."
   (display-scene (pop-scene game)))
 
 (defun open-inventory (game)
-  (let ((scene (inventory-scene :frame 'inventory-menu
-                                :keys '((#\q close-inventory)
-                                        (#\< inventory-previous-tab)
-                                        (#\> inventory-next-tab)
-                                        (#\j inventory-selection-down)
-                                        (#\k inventory-selection-up)
-                                        (#\h inventory-selection-left)
-                                        (#\l inventory-selection-right)
-                                        (#\Newline inventory-confirm-selection)))))
-    (display-scene (push-scene scene game))))
+  (let* ((scene (inventory-scene :frame 'inventory-menu
+                                 :keys '((#\q close-inventory)
+                                         (#\< inventory-previous-tab)
+                                         (#\> inventory-next-tab)
+                                         (#\j inventory-selection-down)
+                                         (#\k inventory-selection-up)
+                                         (#\h inventory-selection-left)
+                                         (#\l inventory-selection-right)
+                                         (#\Newline inventory-confirm-selection))))
+         (context (scene-context scene)))
+    (with-context context
+      (setf (context-var :selected-item) 0)
+      (push-scene scene game)
+      (display-scene scene))))
 
 ;;; **************************************************************************
 ;;;  Other objects manipulations

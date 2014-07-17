@@ -109,4 +109,7 @@
     (for i from 0)
     (after-each
       ;; x = 1 is just for small nice padding, it's temporary
-      (put-text frame 1 i "[~D] ~A" i (name item)))))
+      (if (= i (context-var :selected-item))
+        (cl-tui:with-attributes (:underline) frame
+          (put-text frame 1 i "[~D] ~A" i (name item)))
+        (put-text frame 1 i "[~D] ~A" i (name item))))))
