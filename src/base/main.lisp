@@ -39,7 +39,7 @@
   (catch 'exit-game
     (handler-case
       (cl-tui:with-screen (:noecho :nocursor :cbreak)
-        (progv '(*game*) (list game)
+        (let ((*game* game))
           (display-scene (game-current-scene game)))
         (unless (screen-size-sufficient-p)
           (no-way))
@@ -52,9 +52,7 @@
   "Start point."
   (let* ((game (new-game :map (gen-new-map :testing)))
          (game-version (asdf:component-version (asdf:find-system :isol)))
-         (scene (make-scene 'game-scene
-                            :frame 'game-scene
-                            :variables `((*game* ,game)
-                                         (*game-version* ,game-version)))))
+         (scene (game-scene :frame 'game-scene
+                            :game game)))
     (push-scene scene game)
     (run-game game game-version)))

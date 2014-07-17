@@ -150,22 +150,18 @@ maximum-value."
 ;;; **************************************************************************
 
 (defun close-inventory (game)
-  (pop-scene game)
-  (display-scene (game-current-scene game)))
+  (display-scene (pop-scene game)))
 
 (defun open-inventory (game)
-  (let ((scene (make-scene 'inventory-scene
-                           :frame 'inventory-menu
-                           :keybindings '((#\q close-inventory)
-                                          (#\< inventory-previous-tab)
-                                          (#\> inventory-next-tab)
-                                          (#\j inventory-selection-down)
-                                          (#\k inventory-selection-up)
-                                          (#\h inventory-selection-left)
-                                          (#\l inventory-selection-right)
-                                          (#\Newline inventory-confirm-selection))
-                           :variables `((*game* ,game)
-                                        (*game-version* ,*game-version*)))))
+  (let ((scene (inventory-scene :frame 'inventory-menu
+                                :keys '((#\q close-inventory)
+                                        (#\< inventory-previous-tab)
+                                        (#\> inventory-next-tab)
+                                        (#\j inventory-selection-down)
+                                        (#\k inventory-selection-up)
+                                        (#\h inventory-selection-left)
+                                        (#\l inventory-selection-right)
+                                        (#\Newline inventory-confirm-selection)))))
     (display-scene (push-scene scene game))))
 
 ;;; **************************************************************************
