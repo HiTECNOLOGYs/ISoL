@@ -58,3 +58,19 @@ Binds `x-var' to current x position and `y-var' to current y position."
                        (symbol-name symbol-1)
                        (symbol-name symbol-2))
           package))
+
+(defun mod+ (divisor &rest args)
+  (mod (reduce #'+ args)
+       (if (zerop divisor)
+         1
+         divisor)))
+
+(defun mod- (divisor &rest args)
+  (mod (reduce #'- args)
+       (if (zerop divisor)
+         1
+         divisor)))
+
+(define-modify-macro mod-incf (divisor &optional (n 1)) mod+)
+
+(define-modify-macro mod-decf (divisor &optional (n 1)) mod-)

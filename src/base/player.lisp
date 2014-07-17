@@ -161,7 +161,8 @@ maximum-value."
                                          (#\k inventory-selection-up)
                                          (#\h inventory-selection-left)
                                          (#\l inventory-selection-right)
-                                         (#\Newline inventory-confirm-selection))))
+                                         (#\Newline inventory-confirm-selection)
+                                         (#\d inventory-selection-drop))))
          (context (scene-context scene)))
     (with-context context
       (setf (context-var :selected-item) 0)
@@ -178,15 +179,11 @@ maximum-value."
 
 (defun inventory-selection-down (game)
   (with-slots (inventory) (game-player game)
-    (setf (context-var :selected-item)
-          (mod (+ (context-var :selected-item) 1)
-               (length inventory)))))
+    (mod-incf (context-var :selected-item) (length inventory))))
 
 (defun inventory-selection-up (game)
   (with-slots (inventory) (game-player game)
-    (setf (context-var :selected-item)
-          (mod (+ (context-var :selected-item) -1)
-               (length inventory)))))
+    (mod-decf (context-var :selected-item) (length inventory))))
 
 (defun inventory-selection-right (game)
   (declare (ignore game))
@@ -202,6 +199,12 @@ maximum-value."
   (declare (ignore game))
   ;; Display extensive info about item
   )
+
+(defun inventory-selection-drop (game)
+  (with-slots (inventory location) (game-player game)
+    (destructuring-bind (x y) location
+      (push-object (game-map game) x y (pop inventory)))
+    (mod-decf (context-var :selected-item) (length inventory))))
 
 ;;; **************************************************************************
 ;;;  Other objects manipulations
