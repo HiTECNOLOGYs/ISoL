@@ -59,14 +59,14 @@ Binds `x-var' to current x position and `y-var' to current y position."
                        (symbol-name symbol-2))
           package))
 
-(defun mod+ (divisor &rest args)
-  (mod (reduce #'+ args)
+(defun mod+ (value divisor &rest more-values)
+  (mod (+ value (reduce #'+ more-values))
        (if (zerop divisor)
          1
          divisor)))
 
-(defun mod- (divisor &rest args)
-  (mod (reduce #'- args)
+(defun mod- (value divisor &rest more-values)
+  (mod (- value (reduce #'- more-values))
        (if (zerop divisor)
          1
          divisor)))
