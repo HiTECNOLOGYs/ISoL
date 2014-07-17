@@ -134,7 +134,7 @@
    (takable? :initform nil)
    (movable? :initarg :movable?
              :accessor movable-p))
-  (:documentation "Object whcih may not be fixed on map, may be even
+  (:documentation "Object which may not be fixed on map, may be even
 'transparent' for player motions.  But it is always untakable.
 Destructuable, though, like any other piece of map."))
 
@@ -144,4 +144,3 @@ Destructuable, though, like any other piece of map."))
    (passable? :initform nil))
   (:documentation "Object on map which is not movable as it is a part of world.
 May be destroyed by creatures."))
-
