@@ -120,7 +120,9 @@ class by given generation rules."
 (defun gen-testing-map ()
   ;;; Generating sample map here for debugging purposes
   (let ((map (gen-empty-map)))
-    (push-object map 3 4 (generate-object 'Gun))
+    (push-object map 2 1 (generate-object 'Gun))
+    (push-object map 3 1 (generate-object 'Knife))
+    (push-object map 4 1 (generate-object 'Knife))
     (gen-room map 2 2 :small :top 2)
     map))
 
