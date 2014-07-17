@@ -54,4 +54,3 @@
 (defun map-cell-top (map x y)
   "Returns objects from the top of the pile."
   (first (map-cell-value map x y)))
-
