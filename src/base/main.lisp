@@ -31,8 +31,7 @@
   (take-a-nap))
 
 (defun game-loop (game)
- (loop (game-tick game)
-       (sleep 1/100)))
+  (loop (game-tick game)))
 
 (defun run-game (game game-version)
   "Runs game."
