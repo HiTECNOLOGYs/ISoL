@@ -21,34 +21,44 @@
 ;;;  Objects generation
 ;;; **************************************************************************
 
-(defparameter *objects-map-reader-symbols* nil)
+(defvar *objects-templates* (make-hash-table))
 
-(defmacro define-object-map-symbol (symbol class &body default-initargs)
-  "Binds some symbol to lambda which will create instances of this object with
-some values preinitialized when called."
-  `(pushnew (cons ,symbol
-                  #'(lambda (&rest initargs)
-                      (if initargs
-                          (apply #'make-instance ',class
-                                 ,@default-initargs initargs)
-                          (make-instance ',class ,@default-initargs))))
-            *objects-map-reader-symbols*
-            :test #'eql
-            :key #'car))
+(defun object-generator (object-id)
+  "Returns anonymous function that creates object with given ID when called."
+  (gethash object-id *objects-templates*))
 
-(defun get-object-instance-from-symbol (symbol &rest initargs)
-  "Returns instace of object for given `symbol'"
-  (when-let (function (cdr (assoc symbol *objects-map-reader-symbols*)))
-    (apply function initargs)))
+(defun (setf object-generator) (new-value object-id)
+  "SETF-function for OBJECT-GENERATOR."
+  (setf (gethash object-id *objects-templates*) new-value))
 
-(define-object-map-symbol :Wall Map-Element
+(defun parse-object-generation-rules (class rules)
+  "Translates object generation rules to actual code that generates desired object."
+  ;; At the moment rules are treated as initargs for class.
+  `((apply #'make-instance ',class
+           ,@rules
+           parameters)))
+
+(defmacro define-object-generator (object-id class &body body)
+  "Binds some symbol to lambda which will create instances of object of given
+class by given generation rules."
+  `(setf (object-generator ',object-id)
+         #'(lambda (&rest parameters)
+             (declare (ignorable parameters))
+             ,@(parse-object-generation-rules class body))))
+
+(defun generate-object (id &rest parameters)
+  "Returns instace of object for given `ID'"
+  (awhen (object-generator id)
+    (apply it parameters)))
+
+(define-object-generator Wall Map-Element
   :name "Wall"
   :description "Just rusty old stone wall."
   :display-character #\#
   :hp 10000
   :material 'stone)
 
-(define-object-map-symbol :Ground Map-Element
+(define-object-generator Ground Map-Element
   :name "Ground"
   :passable? t
   :description "Nothing in here."
@@ -56,7 +66,7 @@ some values preinitialized when called."
   :hp :100000
   :material 'stone)
 
-(define-object-map-symbol :Gun Weapon
+(define-object-generator Gun Weapon
   :name "Revolver"
   :description "A bit rusty and dirty old revolver with no ammo."
   :damage-value 15
@@ -64,7 +74,7 @@ some values preinitialized when called."
   :size 2
   :weight 150)
 
-(define-object-map-symbol :Rock Map-Object
+(define-object-generator Rock Map-Object
   :name "Rock"
   :description "A hunge gray rock lying on the floor."
   :movable? t
@@ -73,17 +83,13 @@ some values preinitialized when called."
   :hp :1000
   :material 'stone)
 
-(define-object-map-symbol :Knife Weapon
+(define-object-generator Knife Weapon
   :name "Knife"
   :description "Ordinary steel kitchen knife."
   :damage-value 3
   :kind (list :melee)
   :size 1
   :weight 50)
-
-(define-object-map-symbol :Long-Name Cloth
-  :name "Ahahahyapogarelpohardkoru"
-  :description "...")
 
 ;;; **************************************************************************
 ;;;  Map generation
@@ -101,6 +107,5 @@ some values preinitialized when called."
 (defun gen-testing-map ()
   ;;; Generating sample map here for debugging purposes
   (let ((map (gen-empty-map)))
-    (push-object map 2 2
-                 (get-object-instance-from-symbol :gun))
+    (push-object map 2 2 (generate-object 'Gun))
     map))
