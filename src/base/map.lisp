@@ -24,7 +24,8 @@
 (defun render-map (map)
   "Transforms map in human-readable and printable form."
   (2d-array->list map :transformer #'display-character
-                      :key #'map-cell-top))
+                      :key #'map-cell-top
+                      :reverse-axes? t))
 
 ;;; **************************************************************************
 ;;;  Various map manipulation stuff

@@ -32,15 +32,18 @@
                  (subseq string 0 (- n (length replacement)))
                  replacement)))
 
-(defun 2d-array->list (array &key transformer (key #'aref))
+(defun 2d-array->list (array &key transformer (key #'aref) reverse-axes?)
   "Converts 2 dimensional array to list of lists whcih are rows of array."
   (destructuring-bind (size-y size-x) (array-dimensions array)
     (loop for i below size-y
           collect (loop
                     for j below size-x
+                    for cell = (if reverse-axes?
+                                 (funcall key array j i)
+                                 (funcall key array i j))
                     collect (if (null transformer)
-                              (funcall key array i j)
-                              (funcall transformer (funcall key array i j)))))))
+                              cell
+                              (funcall transformer cell))))))
 
 (defmacro doarray ((x-var y-var array) &body body)
   "Iterates through `array' from top left angle to down right angle.
