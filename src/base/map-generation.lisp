@@ -95,17 +95,43 @@ class by given generation rules."
 ;;;  Map generation
 ;;; **************************************************************************
 
+;; ----------------
+;; High level generation function
+
 (defun gen-new-map (type)
   (ecase type
     (:testing (gen-testing-map))
     (:empty (gen-empty-map))))
 
 (defun gen-empty-map ()
-  (make-array (list 10 10)
-              :initial-element nil))
+  (let ((map (make-array (list 30 30)
+                         :initial-element nil)))
+    (set-map-borders map)))
 
 (defun gen-testing-map ()
   ;;; Generating sample map here for debugging purposes
   (let ((map (gen-empty-map)))
     (push-object map 2 2 (generate-object 'Gun))
     map))
+
+;; ----------------
+;; Primitives
+;;
+;; All the primitives are destructive and operate on exiting map for the sake of
+;; simplicity. I know I'll have problems when I decide to go multi-core but I'm pretty
+;; confident I can take care of it.
+
+(defun set-map-borders (map)
+  "Puts walls at the edges of the map."
+  (destructuring-bind (y x) (array-dimensions map)
+    (iter
+      (for i from 0 to (1- y))
+      (after-each
+        (push-object map 0 i      (generate-object 'Wall))
+        (push-object map (1- x) i (generate-object 'Wall))))
+    (iter
+      (for i from 1 to (- x 2))
+      (after-each
+        (push-object map i 0      (generate-object 'Wall))
+        (push-object map i (1- y) (generate-object 'Wall)))))
+  map)
