@@ -64,6 +64,15 @@ i  — display inventory menu
 ```
 
 ```
+j,k — move item selection down/up
+
+```
+
+```
+d  — drop item from top
+```
+
+```
 q  — close any menu
 ```
 
