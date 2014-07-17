@@ -21,23 +21,38 @@
 ;;;  Contexts
 ;;; **************************************************************************
 
+(defvar *context*)
+
 (defclass Context ()
   ((game :initarg :game
          :accessor context-game)
    (keybindings :initarg :keybindings
-                :accessor context-keybindings)))
+                :accessor context-keybindings)
+   (variables :initform (make-hash-table)
+              :documentation "This hash-table is used to save data between
+scene dispatcher iteration. Scene dispatcher can't go into infinite loop
+because scene might need switching while it does and there's not other
+obvious way to save necessary data until dispatcher is called again."
+              :accessor context-variables)))
+
+(defun context-var (var)
+  "Returns value of contextual variables."
+  (gethash var (context-variables *context*)))
+
+(defun (setf context-var) (new-value var)
+  "SETF-function for CONTEXT-VAR."
+  (setf (gethash var (context-variables *context*)) new-value))
 
 (defun make-context (&key game keybindings)
   (make-instance 'Context
                  :game game
                  :keybindings keybindings))
 
-(defmacro with-context ((context game-var keybindings-var) &body body)
-  (with-gensyms (game keybindings)
-    `(with-slots ((,game game) (,keybindings keybindings)) ,context
-       (let ((,game-var ,game)
-             (,keybindings-var ,keybindings))
-         ,@body))))
+(defmacro with-context (context &body body)
+  "Binds game and key bindsings to given symbols, sets current context
+(by binding it to *CONTEXT*)."
+  `(let ((*context* ,context))
+     ,@body))
 
 ;;; **************************************************************************
 ;;;  Scenes
@@ -92,12 +107,16 @@
 (defgeneric run-scene (object)
   (:method ((scene Scene))
     (when (slot-boundp scene 'dispatcher)
-      (funcall (scene-dispatcher scene)
-               (scene-context scene)))))
+      (funcall (scene-dispatcher scene))))
+  (:method ((game Game))
+    (run-scene (game-current-scene game)))
+  (:method :around ((scene Scene))
+    (with-context (scene-context scene)
+      (call-next-method))))
 
 (defgeneric game-tick (object)
   (:method ((game Game))
-    (run-scene (game-current-scene game))))
+    (run-scene game)))
 
 ;;; **************************************************************************
 ;;;  Dispatchers
@@ -108,8 +127,9 @@
 initialized."
   (let ((handler-name (symbol-append name '/handler)))
     `(progn
-       (defun ,handler-name (context)
-         (with-context (context *game* *keys*)
+       (defun ,handler-name ()
+         (let ((*game* (context-game *context*))
+               (*keys* (context-keybindings *context*)))
            ,@body))
        (defun ,name (&key frame (game *game*) (keys *keys*))
          (make-scene ',handler-name
@@ -117,7 +137,7 @@ initialized."
                      :game game
                      :keybindings keys)))))
 
-(defscene game-scene ()
+(defscene game-scene
   "Game step. Draws map, PC, stuff and prompts player for action."
   ;; Displaying info about stuff lying on the floor.
   (with-slots (map player) *game*
@@ -129,11 +149,11 @@ initialized."
   (process-key (wait-for-key) *game*)
   (cl-tui:clear 'minibuffer))
 
-(defscene menu-scene ()
+(defscene menu-scene
   ;; Handle menu here
   )
 
-(defscene inventory-scene ()
+(defscene inventory-scene
   "Display interface to do all sorts of things with items PC has."
   (redraw-screen)
   (process-key (wait-for-key) *game*))
