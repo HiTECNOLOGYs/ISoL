@@ -168,6 +168,41 @@ maximum-value."
       (push-scene scene game)
       (display-scene scene))))
 
+(defun inventory-previous-tab (game)
+  (declare (ignore game))
+  (cl-tui:tab-backwards 'inventory-menu))
+
+(defun inventory-next-tab (game)
+  (declare (ignore game))
+  (cl-tui:tab-forward 'inventory-menu))
+
+(defun inventory-selection-down (game)
+  (with-slots (inventory) (game-player game)
+    (setf (context-var :selected-item)
+          (mod (+ (context-var :selected-item) 1)
+               (length inventory)))))
+
+(defun inventory-selection-up (game)
+  (with-slots (inventory) (game-player game)
+    (setf (context-var :selected-item)
+          (mod (+ (context-var :selected-item) -1)
+               (length inventory)))))
+
+(defun inventory-selection-right (game)
+  (declare (ignore game))
+  ;; Display some info about item here
+  )
+
+(defun inventory-selection-left (game)
+  (declare (ignore game))
+  ;; Do something else
+  )
+
+(defun inventory-confirm-selection (game)
+  (declare (ignore game))
+  ;; Display extensive info about item
+  )
+
 ;;; **************************************************************************
 ;;;  Other objects manipulations
 ;;; **************************************************************************
