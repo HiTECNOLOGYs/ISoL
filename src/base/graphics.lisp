@@ -70,7 +70,7 @@
         (for char in line)
         (for x from 0)
         (after-each
-          (cl-tui:put-char frame y x char))))))
+          (put-char frame x y char))))))
 
 (defun draw-player (frame player)
   (with-slots (display-character location) player

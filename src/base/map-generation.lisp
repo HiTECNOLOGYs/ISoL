@@ -63,7 +63,7 @@ class by given generation rules."
   :passable? t
   :description "Nothing in here."
   :display-character #\.
-  :hp :100000
+  :hp 100000
   :material 'stone)
 
 (define-object-generator Gun Weapon

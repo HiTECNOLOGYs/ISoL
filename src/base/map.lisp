@@ -40,7 +40,7 @@
 
 (defun map-cell-passable-p (map x y)
   "Checks if some map place is passable for player."
-  (every #'passable-p (map-cell-value map y x)))
+  (every #'passable-p (map-cell-value map x y)))
 
 (defun push-object (map x y object)
   "Pushes new object on top of stack of others."
