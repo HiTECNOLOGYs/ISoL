@@ -104,6 +104,8 @@
       (put-text frame 0 y (ensure-string-within-length h message)))))
 
 (defun items-callback (&key frame)
+  (cl-tui:draw-tab-bar 'inventory-menu
+                       :top-padding 1)
   (iter
     (for item in (inventory (game-player *game*)))
     (for i from 0)
@@ -111,5 +113,9 @@
       ;; x = 1 is just for small nice padding, it's temporary
       (if (= i (context-var :selected-item))
         (cl-tui:with-attributes (:underline) frame
-          (put-text frame 1 i "[~D] ~A" i (name item)))
-        (put-text frame 1 i "[~D] ~A" i (name item))))))
+          (put-text frame 1 (+ i 3) "[~D] ~A" i (name item)))
+        (put-text frame 1 (+ i 3) "[~D] ~A" i (name item))))))
+
+(defun crafting-callback (&key frame)
+  (cl-tui:draw-tab-bar 'inventory-menu
+                       :top-padding 1))

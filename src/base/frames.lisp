@@ -70,6 +70,10 @@
                              :render 'items-callback)
                      :on inventory-menu)
 
+(cl-tui:define-frame crafting (cl-tui:callback-frame
+                                :render 'crafting-callback)
+                     :on inventory-menu)
+
 ;;; **************************************************************************
 ;;;  Player menu
 ;;; **************************************************************************
