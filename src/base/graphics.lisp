@@ -106,15 +106,22 @@
 (defun items-callback (&key frame)
   (cl-tui:draw-tab-bar 'inventory-menu
                        :top-padding 1)
-  (iter
-    (for item in (inventory (game-player *game*)))
-    (for i from 0)
-    (after-each
-      ;; x = 1 is just for small nice padding, it's temporary
-      (if (= i (context-var :selected-item))
-        (cl-tui:with-attributes (:underline) frame
-          (put-text frame 1 (+ i 3) "[~D] ~A" i (name item)))
-        (put-text frame 1 (+ i 3) "[~D] ~A" i (name item))))))
+  (with-slots (inventory) (game-player *game*)
+    (iter
+      (with max-length = (if (emptyp inventory)
+                           0
+                           (reduce #'max inventory
+                                   :key (compose #'length #'name))))
+      (for item in inventory)
+      (for i from 0)
+      (for item-display-text next (format nil "~A~vT"
+                                          (name item) max-length))
+      (after-each
+        ;; x = 1 is just for small nice padding, it's temporary
+        (if (= i (context-var :selected-item))
+          (cl-tui:with-attributes (:underline) frame
+            (put-text frame 1 (+ i 3) item-display-text))
+          (put-text frame 1 (+ i 3) item-display-text))))))
 
 (defun crafting-callback (&key frame)
   (cl-tui:draw-tab-bar 'inventory-menu
