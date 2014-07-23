@@ -24,7 +24,8 @@
                :cl-store
                :alexandria
                :iterate
-               :anaphora)
+               :anaphora
+               :let+)
   :in-order-to ((test-op (load-op :isol/tests)))
   :perform (test-op (op component)
              (asdf/package:symbol-call :fiveam :run! :isol))
@@ -37,6 +38,7 @@
                 :components ((:file "objects")
                              (:file "items")
                              (:file "map")
+                             (:file "object-generation")
                              (:file "map-generation")
                              (:file "keyboard")
                              (:file "player")

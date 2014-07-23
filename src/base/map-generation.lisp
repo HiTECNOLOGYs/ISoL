@@ -18,94 +18,8 @@
 (in-package :isol)
 
 ;;; **************************************************************************
-;;;  Objects generation
+;;;  High level
 ;;; **************************************************************************
-
-(defvar *objects-templates* (make-hash-table))
-
-(defun object-generator (object-id)
-  "Returns anonymous function that creates object with given ID when called."
-  (gethash object-id *objects-templates*))
-
-(defun (setf object-generator) (new-value object-id)
-  "SETF-function for OBJECT-GENERATOR."
-  (setf (gethash object-id *objects-templates*) new-value))
-
-(eval-when (:compile-toplevel :load-toplevel :execute)
-  (defun parse-object-generation-rules (class rules)
-    "Translates object generation rules to actual code that generates desired object."
-    ;; At the moment rules are treated as initargs for class.
-    `((apply #'make-instance ',class
-             ,@rules
-             parameters))))
-
-(defmacro define-object-generator (object-id class &body body)
-  "Binds some symbol to lambda which will create instances of object of given
-class by given generation rules."
-  `(setf (object-generator ',object-id)
-         #'(lambda (&rest parameters)
-             (declare (ignorable parameters))
-             ,@(parse-object-generation-rules class body))))
-
-(defun generate-object (id &rest parameters)
-  "Returns instace of object for given `ID'"
-  (awhen (object-generator id)
-    (apply it parameters)))
-
-(define-object-generator Wall Map-Element
-  :name "Wall"
-  :description "Just rusty old stone wall."
-  :display-character #\#
-  :hp 10000
-  :material 'stone)
-
-(define-object-generator Ground Map-Element
-  :name "Ground"
-  :passable? t
-  :description "Nothing in here."
-  :display-character #\.
-  :hp 100000
-  :material 'stone)
-
-(define-object-generator Door Map-Element
-  :name "Door"
-  :passable? t
-  :description "Scratched wooden door."
-  :display-character #\+
-  :hp 100
-  :material 'wood)
-
-(define-object-generator Gun Weapon
-  :name "Revolver"
-  :description "A bit rusty and dirty old revolver with no ammo."
-  :damage-value 15
-  :kind (list :gun :bullets-9mm)
-  :size 2
-  :weight 150)
-
-(define-object-generator Boulder Map-Object
-  :name "Boulder"
-  :description "A hunge gray piece of rock lying on the floor."
-  :movable? t
-  :passable? t
-  :display-character #\*
-  :hp :1000
-  :material 'stone)
-
-(define-object-generator Knife Weapon
-  :name "Knife"
-  :description "Ordinary steel kitchen knife."
-  :damage-value 3
-  :kind (list :melee)
-  :size 1
-  :weight 50)
-
-;;; **************************************************************************
-;;;  Map generation
-;;; **************************************************************************
-
-;; ----------------
-;; High level generation function
 
 (defun gen-new-map (type)
   (ecase type
@@ -125,52 +39,136 @@ class by given generation rules."
     (push-object map 2 1 (generate-object 'Gun))
     (push-object map 3 1 (generate-object 'Knife))
     (push-object map 4 1 (generate-object 'Knife))
-    (gen-room map 2 2 :small :top 2)
+    (generate-map-primitive/small-room map 2 2 :top 1)
     map))
 
-;; ----------------
-;; Primitives
-;;
-;; All the primitives are destructive and operate on exiting map for the sake of
-;; simplicity. I know I'll have problems when I decide to go multi-core but I'm pretty
-;; confident I can take care of it.
-
-(defun set-borders (map x1 y1 x2 y2)
-  (iter
-    (for i from y1 to y2)
-    (after-each
-      (push-object map x1 i (generate-object 'Wall))
-      (push-object map x2 i (generate-object 'Wall))))
-  (iter
-    (for i from (1+ x1) to (1- x2))
-    (after-each
-      (push-object map i y1 (generate-object 'Wall))
-      (push-object map i y2 (generate-object 'Wall))))
-  map)
+;;; **************************************************************************
+;;;  Debug
+;;; **************************************************************************
 
 (defun set-map-borders (map)
   "Puts walls at the edges of the map."
   (destructuring-bind (y x) (array-dimensions map)
-    (set-borders map 0 0 (1- x) (1- y)))
+    (generate-map-primitive/borders map 0 0 x y))
   map)
 
-(defun gen-room (map x y type door-side door-position)
-  "Generates box of walls and sets door on appropriate space. It doesn't check "
-  (destructuring-bind (end-x end-y)
-      (ecase type
-        (:large (list (+ x 20) (+ y 20)))
-        (:standard (list (+ x 10) (+ y 10)))
-        (:small (list (+ x 5) (+ y 5))))
-    (when (or (<= (- end-x x) door-position)
-              (<= (- end-y y) door-position))
-      (error "Hey! Door position is bigger than the room."))
-    ;; Setting borders
-    (set-borders map x y end-x end-y)
-    ;; Making door
+;;; **************************************************************************
+;;;  Primitives
+;;; **************************************************************************
+;;;
+;;; All the primitives are destructive and operate on exiting map for the sake of
+;;; simplicity. I know I'll have problems when I decide to go multi-core but I'm pretty
+;;; confident I can take care of it.
+
+;; ----------------
+;; Base
+
+(defvar *map-primitives* (make-hash-table))
+
+(defun map-primitive (name)
+  (gethash name *map-primitives*))
+
+(defun (setf map-primitive) (new-value name)
+  (setf (gethash name *map-primitives*) new-value))
+
+(defun generate-map-primitive (map primitive-name &rest parameters)
+  (awhen (map-primitive primitive-name)
+    (apply it map parameters)))
+
+(eval-when (:load-toplevel :compile-toplevel :execute)
+  (defun parse-map-primitive-definition (definition)
+    "Transforms map primitive definition into code that creates one."
+    (let+ (((x-size y-size) (cdr (assoc :size definition)))
+           (fill-object (cdr (assoc :fill definition)))
+           (subcomponents (cdr (assoc :components definition)))
+           (parameters (cdr (assoc :parameters definition)))
+           (body (cdr (assoc :gen definition)))
+           (documentation (car (cdr (assoc :doc definition))))
+           (final-arguments-list
+             `(map x y ; Obligatory parameters
+                   ,@(when (symbolp x-size)
+                       `(,x-size))
+                   ,@(when (symbolp y-size)
+                       `(,y-size))
+                   ,@(when (symbolp fill-object)
+                       fill-object)
+                   ,@parameters)))
+      (values
+        `(lambda ,final-arguments-list
+           (let* ((x-size ,x-size)
+                  (y-size ,y-size)
+                  (x1 x)
+                  (y1 y)
+                  (x2 (+ x ,(if (symbolp x-size)
+                              '(1- x-size)
+                              (1- x-size))))
+                  (y2 (+ y ,(if (symbolp y-size)
+                              '(1- y-size)
+                              (1- y-size)))))
+             (declare (ignorable x-size y-size x1 y1 x2 y2))
+             ,@(iter
+                 (for (name . params) in subcomponents)
+                 (collecting `(generate-map-primitive map ',name ,@params)))
+             ,@(when fill-object
+                 `((iter
+                     (for i from y1 to y2)
+                     (after-each
+                       (iter
+                         (for j from x1 to x2)
+                         (after-each
+                           (push-object map j i (generate-object ,fill-object))))))))
+             ,@body)
+           map)
+        documentation
+        final-arguments-list))))
+
+(defmacro define-map-primitive (name &body body)
+  (multiple-value-bind (function doc args) (parse-map-primitive-definition body)
+    `(progn
+       (setf (map-primitive ',name)
+             #',function)
+       (defun ,(intern (format nil "GENERATE-MAP-PRIMITIVE/~A" name)) ,args
+         ,doc
+         (generate-map-primitive map ',name ,@(remove 'map args))))))
+
+;; ----------------
+;; Primitives
+
+(define-map-primitive Borders
+  (:size x-size y-size)
+  (:doc "Limites perimeter of given area by walls.")
+  (:gen
+    (iter
+      (for i from y1 to y2)
+      (after-each
+        (push-object map x1 i (generate-object 'Wall))
+        (push-object map x2 i (generate-object 'Wall))))
+    (iter
+      (for i from (1+ x1) to (1- x2))
+      (after-each
+        (push-object map i y1 (generate-object 'Wall))
+        (push-object map i y2 (generate-object 'Wall))))))
+
+(define-map-primitive Exit-door
+  (:parameters door-side door-position)
+  (:size x-size y-size)
+  (:doc "Sets door on the border of given area.")
+  (:gen
     (let ((door (generate-object 'Door)))
       (ecase door-side
-        (:right  (push-object map end-x (+ y door-position) door))
-        (:left   (push-object map x (+ y door-position) door))
-        (:top    (push-object map (+ x door-position) y door))
-        (:bottom (push-object map (+ y door-position) end-y door)))))
-  map)
+        (:right  (push-object map x2 (+ y1 door-position) door))
+        (:left   (push-object map x1 (+ y1 door-position) door))
+        (:top    (push-object map (+ x1 door-position) y1 door))
+        (:bottom (push-object map (+ y1 door-position) y2 door))))))
+
+(define-map-primitive Small-room
+  (:parameters door-side door-position)
+  (:size 5 5)
+  (:doc "Generates box of walls and sets door on appropriate space.")
+  (:components
+    (Borders x1 y1 x-size y-size)
+    (Exit-door x1 y1 x-size y-size door-side door-position))
+  (:gen
+    (when (or (<= x-size door-position)
+              (<= y-size door-position))
+      (error "Hey! Door position is bigger than the room!"))))
