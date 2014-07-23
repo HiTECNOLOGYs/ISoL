@@ -46,11 +46,10 @@ class by given generation rules."
   :hp 100000
   :material 'stone)
 
-(define-object-generator Door Map-Element
-  :name "Door"
+(define-object-generator Wooden-Door Door
+  :name "Wooden door"
   :passable? t
   :description "Scratched wooden door."
-  :display-character #\+
   :hp 100
   :material 'wood)
 

@@ -154,12 +154,12 @@
   (:size x-size y-size)
   (:doc "Sets door on the border of given area.")
   (:gen
-    (let ((door (generate-object 'Door)))
+    (let ((door (generate-object 'Wooden-Door)))
       (ecase door-side
-        (:right  (push-object map x2 (+ y1 door-position) door))
-        (:left   (push-object map x1 (+ y1 door-position) door))
-        (:top    (push-object map (+ x1 door-position) y1 door))
-        (:bottom (push-object map (+ y1 door-position) y2 door))))))
+        (:right  (replace-top-object map x2 (+ y1 door-position) door))
+        (:left   (replace-top-object map x1 (+ y1 door-position) door))
+        (:top    (replace-top-object map (+ x1 door-position) y1 door))
+        (:bottom (replace-top-object map (+ y1 door-position) y2 door))))))
 
 (define-map-primitive Small-room
   (:parameters door-side door-position)

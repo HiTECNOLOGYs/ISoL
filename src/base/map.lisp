@@ -52,6 +52,11 @@
   "Removes object from pile of objects."
   (pop (map-cell-value map x y)))
 
+(defun replace-top-object (map x y new-object)
+  (let ((last-object (pop-object map x y)))
+    (values (push-object map x y new-object)
+            last-object)))
+
 (defun map-cell-top (map x y)
   "Returns objects from the top of the pile."
   (first (map-cell-value map x y)))

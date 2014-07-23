@@ -129,6 +129,7 @@
 ;; ----------------
 ;; Map
 
+;; TODO This is a dirty hack around map objects sizes/weights. Fix this later.
 (defclass Map-Object (Object)
   ((display-character :initform #\&)
    (takable? :initform nil)
@@ -144,3 +145,8 @@ Destructuable, though, like any other piece of map."))
    (passable? :initform nil))
   (:documentation "Object on map which is not movable as it is a part of world.
 May be destroyed by creatures."))
+
+(defclass Door (Map-Element)
+  ((display-character :initform #\+)
+   (open :initform nil
+         :accessor open-p)))
