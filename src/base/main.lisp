@@ -41,7 +41,7 @@
           (display-scene (game-current-scene game)))
         (unless (screen-size-sufficient-p)
           (no-way))
-        (display-message-in-minibuffer "Welcome to ISoL ~A" game-version)
+        (display-message game "Welcome to ISoL ~A" game-version)
         (game-loop game))
       (sb-sys:interactive-interrupt ()
         (exit-game game)))))

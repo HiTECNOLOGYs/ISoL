@@ -17,9 +17,6 @@
 
 (in-package :isol)
 
-(defparameter *log-backtrack-n* 5
-  "Number of displayed log messages from the end of log.")
-
 ;;; **************************************************************************
 ;;;  Game object. Creating, saving, loading game state
 ;;; **************************************************************************
@@ -38,7 +35,9 @@
    (contexts :initform nil
              :accessor game-contexts)
    (log :initform nil
-        :accessor game-log))
+        :accessor game-log)
+   (messages-buffer :initform nil
+                    :accessor game-messages-buffer))
   (:documentation "Stores necessary info about current game."))
 
 (defun save-game (game pathname)
@@ -54,9 +53,29 @@
          initargs))
 
 ;;; **************************************************************************
-;;;  Various game manipulation functions. Those a pretty low-level, though
+;;;  Messages
 ;;; **************************************************************************
 
 (defun log-game-message (game format-string &rest format-args)
   (push (apply #'format nil format-string format-args)
         (game-log game)))
+
+(defun display-message (game format-string &rest format-args)
+  (let ((string (apply #'format nil format-string format-args)))
+    (push string (game-messages-buffer game))
+    string))
+
+(defun flush-messages-to-minibuffer (game)
+  (let ((minibuffer-width (second (cl-tui:frame-size (cl-tui:frame 'minibuffer)))))
+    (with-slots (messages-buffer) game
+      (dolist (message messages-buffer (values))
+        (cl-tui:clear 'minibuffer)
+        (put-text 'minibuffer 0 0
+                  (ensure-string-within-length
+                    minibuffer-width message
+                    :replacement "[Press space]"
+                    :always-include-replacement? (> (length messages-buffer) 1)))
+        (redraw-screen)
+        (when (> (length messages-buffer) 1)
+          (wait-confirmation))
+        (log-game-message game (pop messages-buffer))))))

@@ -49,11 +49,6 @@
 (defun put-char (frame x y char)
   (cl-tui:put-char frame y x char))
 
-(defun display-message-in-minibuffer (format-string &rest format-args)
-  (let ((minibuffer-width (second (cl-tui:frame-size (cl-tui:frame 'minibuffer))))
-        (string (apply #'format nil format-string format-args)))
-    (put-text 'minibuffer 0 0 (ensure-string-within-length minibuffer-width string))))
-
 ;;; **************************************************************************
 ;;;  Callbacks
 ;;; **************************************************************************
@@ -95,13 +90,13 @@
   (draw-player-info frame (game-player *game*)))
 
 (defun game-log-callback (&key frame h)
-  (loop
-    for message in (first-n *log-backtrack-n* (game-log *game*))
-    with y = 0
-    do
-    (when message
-      (incf y)
-      (put-text frame 0 y (ensure-string-within-length h message)))))
+  (iter
+    (for message in (first-n (1- h) (game-log *game*)))
+    (with y = 0)
+    (after-each
+      (when message
+        (incf y)
+        (put-text frame 0 y "> ~A" (ensure-string-within-length h message))))))
 
 (defun items-callback (&key frame)
   (cl-tui:draw-tab-bar 'inventory-menu

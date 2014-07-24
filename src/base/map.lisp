@@ -21,10 +21,18 @@
 ;;;  Rendering map
 ;;; **************************************************************************
 
+(defun first-visible-object (objects)
+  "Finds first object with non-nil display character in list of objects."
+  (let* ((object (car objects))
+         (display-character (display-character object)))
+    (if display-character
+      object
+      (first-visible-object (cdr objects)))))
+
 (defun render-map (map)
   "Transforms map in human-readable and printable form."
-  (2d-array->list map :transformer #'display-character
-                      :key #'map-cell-top
+  (2d-array->list map :transformer (compose #'display-character #'first-visible-object)
+                      :key #'map-cell-value
                       :reverse-axes? t))
 
 ;;; **************************************************************************

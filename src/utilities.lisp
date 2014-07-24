@@ -25,12 +25,21 @@
     (cons (car list)
           (first-n (1- n) (cdr list)))))
 
-(defun ensure-string-within-length (n string &optional (replacement "$"))
-  (if (<= (length string) n)
-    string
-    (concatenate 'string
-                 (subseq string 0 (- n (length replacement)))
-                 replacement)))
+(defun ensure-string-within-length (n string
+                                      &key (replacement "$")
+                                           always-include-replacement?)
+  (cond
+    ((and always-include-replacement?
+          (<= (+ (length string) (length replacement)) n))
+     (concatenate 'string
+                  string
+                  replacement))
+    ((<= (length string) n)
+     string)
+    (t
+     (concatenate 'string
+                  (subseq string 0 (- n (length replacement)))
+                  replacement))))
 
 (defun 2d-array->list (array &key transformer (key #'aref) reverse-axes?)
   "Converts 2 dimensional array to list of lists whcih are rows of array."

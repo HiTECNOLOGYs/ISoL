@@ -138,13 +138,17 @@ initialized."
 (defscene game-scene
   "Game step. Draws map, PC, stuff and prompts player for action."
   ;; Displaying info about stuff lying on the floor.
+  (flush-messages-to-minibuffer *game*)
+  ;; ----------------
+  (redraw-screen)
+  (process-key (wait-for-key) *game*)
+  ;; ----------------
   (with-slots (map player) *game*
     (destructuring-bind (x y) (location player)
       (let ((map-cell (map-cell-top map x y)))
         (when (typep map-cell 'Item)
-          (display-message-in-minibuffer "~A is lying here." (name map-cell))))))
-  (redraw-screen)
-  (process-key (wait-for-key) *game*)
+          (display-message *game* "~A is lying here." (name map-cell))))))
+  ;; ----------------
   (cl-tui:clear 'minibuffer))
 
 (defscene menu-scene

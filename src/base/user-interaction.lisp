@@ -17,6 +17,9 @@
 
 (in-package :isol)
 
+(defun wait-confirmation (&optional (key #\Space))
+  (iter (until (equal key (wait-for-key)))))
+
 #+nil
 (defun display-message-in-minibuffer (string)
   "Displays message in minibuffer until palyer moves."

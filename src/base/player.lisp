@@ -229,3 +229,49 @@ maximum-value."
 (define-player-key-handler pc-pick-object (#\; :game)
   (pick-up-object player map))
 
+;; ----------------
+;; Using world objects
+
+(define-player-key-handler pc-use-object (#\a :game)
+  (push-context (make-context :input-mode :object-usage)
+                *game*))
+
+(define-player-key-handler pc-use-object-up (#\j :object-usage)
+  (with-relative-object (map player object 0 1)
+    (use-object player map object))
+  (pop-context *game*))
+
+(define-player-key-handler pc-use-object-down (#\k :object-usage)
+  (with-relative-object (map player object 0 -1)
+    (use-object player map object))
+  (pop-context *game*))
+
+(define-player-key-handler pc-use-object-left (#\h :object-usage)
+  (with-relative-object (map player object -1 0)
+    (use-object player map object))
+  (pop-context *game*))
+
+(define-player-key-handler pc-use-object-right (#\l :object-usage)
+  (with-relative-object (map player object 1 0)
+    (use-object player map object))
+  (pop-context *game*))
+
+(define-player-key-handler pc-use-object-up-left (#\y :object-usage)
+  (with-relative-object (map player object -1 -1)
+    (use-object player map object))
+  (pop-context *game*))
+
+(define-player-key-handler pc-use-object-up-right (#\u :object-usage)
+  (with-relative-object (map player object 1 -1)
+    (use-object player map object))
+  (pop-context *game*))
+
+(define-player-key-handler pc-use-object-down-left (#\b :object-usage)
+  (with-relative-object (map player object -1 1)
+    (use-object player map object))
+  (pop-context *game*))
+
+(define-player-key-handler pc-use-object-down-right (#\n :object-usage)
+  (with-relative-object (map player object 1 1)
+    (use-object player map object))
+  (pop-context *game*))
