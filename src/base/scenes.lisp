@@ -26,8 +26,8 @@
 (defclass Context ()
   ((game :initarg :game
          :accessor context-game)
-   (keybindings :initarg :keybindings
-                :accessor context-keybindings)
+   (input-mode :initarg :input-mode
+               :accessor context-input-mode)
    (variables :initform (make-hash-table)
               :documentation "This hash-table is used to save data between
 scene dispatcher iteration. Scene dispatcher can't go into infinite loop
@@ -43,10 +43,10 @@ obvious way to save necessary data until dispatcher is called again."
   "SETF-function for CONTEXT-VAR."
   (setf (gethash var (context-variables *context*)) new-value))
 
-(defun make-context (&key game keybindings)
+(defun make-context (&key game input-mode)
   (make-instance 'Context
                  :game game
-                 :keybindings keybindings))
+                 :input-mode input-mode))
 
 (defmacro with-context (context &body body)
   "Binds game and key bindsings to given symbols, sets current context
@@ -75,12 +75,9 @@ obvious way to save necessary data until dispatcher is called again."
         (bind-key key binding)))
     *keys*))
 
-(defun make-scene (function &key frame game keybindings)
-  (let* ((keys (etypecase keybindings
-                 (list (keybindings-list->hash-table keybindings))
-                 (hash-table keybindings)))
-         (context (make-context :game game
-                                :keybindings keys)))
+(defun make-scene (function &key frame game input-mode)
+  (let* ((context (make-context :game game
+                                :input-mode input-mode)))
     (make-instance 'Scene
                    :frame frame
                    :dispatcher function
@@ -128,14 +125,14 @@ initialized."
   (let ((handler-name (symbol-append name '/handler)))
     `(progn
        (defun ,handler-name ()
-         (let ((*game* (context-game *context*))
-               (*keys* (context-keybindings *context*)))
-           ,@body))
-       (defun ,name (&key frame (game *game*) (keys *keys*))
+         (let ((*game* (context-game *context*)))
+           (with-input-mode (context-input-mode *context*)
+             ,@body)))
+       (defun ,name (&key frame (game *game*) (input-mode *input-mode*))
          (make-scene ',handler-name
                      :frame frame
                      :game game
-                     :keybindings keys)))))
+                     :input-mode input-mode)))))
 
 (defscene game-scene
   "Game step. Draws map, PC, stuff and prompts player for action."

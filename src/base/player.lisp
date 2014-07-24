@@ -106,6 +106,14 @@ maximum-value."
         (encode-energy (energy player) (max-energy player))))
 
 ;;; **************************************************************************
+;;;  Input modes
+;;; **************************************************************************
+
+(define-input-mode :game)
+(define-input-mode :inventory)
+(define-input-mode :object-usage)
+
+;;; **************************************************************************
 ;;;  Movement
 ;;; **************************************************************************
 
@@ -115,92 +123,78 @@ maximum-value."
     (incf (object-y player) y)
     (list (object-x player) (object-y player))))
 
-(defmacro define-player-key (char &body body)
-  `(bind-key ,char
-             #'(lambda (game)
-                 (with-slots (player map) game
-                   ,@body))))
+(defmacro define-player-key-handler (name (key mode-name) &body body)
+  `(define-key-handler ,name (,key ,mode-name)
+     (with-slots (player map) game
+       ,@body)))
 
-(define-player-key #\j
+(define-player-key-handler move-pc-up (#\j :game)
   (move-creature player map 0 1))
 
-(define-player-key #\k
+(define-player-key-handler move-pc-down (#\k :game)
   (move-creature player map 0 -1))
 
-(define-player-key #\h
+(define-player-key-handler move-pc-left (#\h :game)
   (move-creature player map -1 0))
 
-(define-player-key #\l
+(define-player-key-handler move-pc-right (#\l :game)
   (move-creature player map 1 0))
 
-(define-player-key #\y
+(define-player-key-handler move-pc-up-left (#\y :game)
   (move-creature player map -1 -1))
 
-(define-player-key #\u
+(define-player-key-handler move-pc-up-right (#\u :game)
   (move-creature player map 1 -1))
 
-(define-player-key #\b
+(define-player-key-handler move-pc-down-left (#\b :game)
   (move-creature player map -1 1))
 
-(define-player-key #\n
+(define-player-key-handler move-pc-down-right (#\n :game)
   (move-creature player map 1 1))
 
 ;;; **************************************************************************
 ;;;  Inventory
 ;;; **************************************************************************
 
-(defun close-inventory (game)
-  (display-scene (pop-scene game)))
-
-(defun open-inventory (game)
+(define-key-handler open-inventory (#\i :game)
   (let* ((scene (inventory-scene :frame 'inventory-menu
-                                 :keys '((#\q close-inventory)
-                                         (#\< inventory-previous-tab)
-                                         (#\> inventory-next-tab)
-                                         (#\j inventory-selection-down)
-                                         (#\k inventory-selection-up)
-                                         (#\h inventory-selection-left)
-                                         (#\l inventory-selection-right)
-                                         (#\Newline inventory-confirm-selection)
-                                         (#\d inventory-selection-drop))))
+                                 :input-mode :inventory))
          (context (scene-context scene)))
     (with-context context
       (setf (context-var :selected-item) 0)
       (push-scene scene game)
       (display-scene scene))))
 
-(defun inventory-previous-tab (game)
-  (declare (ignore game))
+(define-key-handler close-inventory (#\q :inventory)
+  (display-scene (pop-scene game)))
+
+(define-key-handler inventory-previous-tab (#\< :inventory)
   (cl-tui:tab-backwards 'inventory-menu))
 
-(defun inventory-next-tab (game)
-  (declare (ignore game))
+(define-key-handler inventory-next-tab (#\> :inventory)
   (cl-tui:tab-forward 'inventory-menu))
 
-(defun inventory-selection-down (game)
+(define-key-handler inventory-selection-down (#\j :inventory)
   (with-slots (inventory) (game-player game)
     (mod-incf (context-var :selected-item) (length inventory))))
 
-(defun inventory-selection-up (game)
+(define-key-handler inventory-selection-up (#\k :inventory)
   (with-slots (inventory) (game-player game)
     (mod-decf (context-var :selected-item) (length inventory))))
 
-(defun inventory-selection-right (game)
-  (declare (ignore game))
-  ;; Display some info about item here
+(define-key-handler inventory-selection-left (#\h :inventory)
+  ;; Move item to the lefter parts of the bag
   )
 
-(defun inventory-selection-left (game)
-  (declare (ignore game))
-  ;; Do something else
+(define-key-handler inventory-selection-right (#\l :inventory)
+  ;; Move item to the righter parts of the bag
   )
 
-(defun inventory-confirm-selection (game)
-  (declare (ignore game))
-  ;; Display extensive info about item
+(define-key-handler inventory-confirm-selection (#\Newline :inventory)
+  ;; Display info about item
   )
 
-(defun inventory-selection-drop (game)
+(define-key-handler inventory-selection-drop (#\d :inventory)
   (with-slots (inventory location) (game-player game)
     (destructuring-bind (x y) location
       (push-object (game-map game) x y (pop inventory)))
@@ -210,6 +204,9 @@ maximum-value."
 ;;;  Other objects manipulations
 ;;; **************************************************************************
 
+;; ----------------
+;; Picking up
+
 (defmethod pick-up-object ((player Player) map)
   (destructuring-bind (x y) (location player)
     (awhen (map-cell-top map x y)
@@ -217,7 +214,6 @@ maximum-value."
         (push (pop-object map x y)
               (inventory player))))))
 
-(define-player-key #\;
+(define-player-key-handler pc-pick-object (#\; :game)
   (pick-up-object player map))
 
-(bind-key #\i 'open-inventory)

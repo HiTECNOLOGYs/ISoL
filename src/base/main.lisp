@@ -24,7 +24,7 @@
   (declare (ignore game))
   (throw 'exit-game (values)))
 
-(bind-key #\q 'exit-game)
+(define-key-binding #\q :game exit-game)
 
 (defun no-way ()
   (put-text :root 0 0 "To play ISoL you need at least 40 rows and 80 columns in your terminal, sorry. To quit press ^C.")

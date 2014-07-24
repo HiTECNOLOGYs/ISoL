@@ -64,13 +64,3 @@
    (items :initarg :items
           :accessor items))
   (:documentation "This is like additional inventory. Main indevtory is limited in size so this stuff cound be very useful.")) 
-
-;; ----------------
-;; Generic functions
-
-(defgeneric use-object (creature map item)
-  (:documentation "Called each time item is used by creature."))
-(defgeneric pick-up-object (creature map)
-  (:documentation "Called each time creature picks up object."))
-(defgeneric combine-objects (creature item-1 item-2)
-  (:documentation "Called whenever creature tries to combine two items."))

@@ -101,14 +101,30 @@
             do (setf (slot-value creature slot)
                      (slot-value creature slot-max))))
 
+;;; **************************************************************************
+;;;  Methods and functions
+;;; **************************************************************************
+
+;; ----------------
+;; Generic functions
 
 (defgeneric move-creature (creature map x y)
   (:documentation "Moves creature by `x' points on X axis and by `y' points on Y axis."))
 
+(defgeneric use-object (creature map object)
+  (:documentation "Called each time object is used by creature."))
+
+(defgeneric pick-up-object (creature map)
+  (:documentation "Called each time creature tries to pick up object."))
+
+;; ----------------
+;; Methods
 
 (defmethod display-character ((object (eql nil)))
   #\Space)
 
+;; ----------------
+;; Functions
 
 (defun object-x (object)
   (first (location object)))
@@ -123,11 +139,11 @@
   (setf (second (location object)) new-value))
 
 ;;; **************************************************************************
-;;;  Object subclasses
+;;;  Map objects
 ;;; **************************************************************************
 
 ;; ----------------
-;; Map
+;; Classes
 
 ;; TODO This is a dirty hack around map objects sizes/weights. Fix this later.
 (defclass Map-Object (Object)
@@ -149,4 +165,5 @@ May be destroyed by creatures."))
 (defclass Door (Map-Element)
   ((display-character :initform #\+)
    (open :initform nil
-         :accessor open-p)))
+         :accessor open-p))
+  (:documentation "Object that can be opened or closed by player."))
