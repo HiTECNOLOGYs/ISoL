@@ -60,6 +60,10 @@ h     l  — movement
 ```
 
 ```
+a — interact with object (direction is suplied via standard movement keys after)
+```
+
+```
 i  — display inventory menu
 ```
 
