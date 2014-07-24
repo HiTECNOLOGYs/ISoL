@@ -275,3 +275,29 @@ maximum-value."
   (with-relative-object (map player object 1 1)
     (use-object player map object))
   (pop-context *game*))
+
+;; ----------------
+;; Methods
+
+(defmethod use-object ((creature Player) map (object (eql nil)))
+  (display-message *game* "Err. There's NOTHING in here. Literally."))
+
+(defmethod use-object ((creature Player) map object)
+  (display-message *game*
+                   "I have no idea how am I supposed to make use of ~A."
+                   (name object)))
+
+(defmethod use-object ((creature Player) map (object Door))
+  (with-slots (open passable? display-character
+               display-character-open display-character-closed)
+      object
+    (setf open (not open)
+          passable? open
+          display-character (if open
+                              display-character-open
+                              display-character-closed))
+    (display-message *game*
+                     (if open
+                       "The door is now opened."
+                       "The door is now closed."))
+    open))
