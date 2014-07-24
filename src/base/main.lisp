@@ -17,8 +17,6 @@
 
 (in-package :isol)
 
-(defvar *game*)
-
 (defun exit-game (game)
   (declare (ignore game))
   (throw 'exit-game (values)))

@@ -34,7 +34,7 @@
 object to `object'. Also binds object's true coordinates to X and Y."
   `(let* ((x (+ (object-x ,player) ,dx))
           (y (+ (object-y ,player) ,dy))
-          (object (map-cell-top ,map x y)))
+          (,object (map-cell-top ,map x y)))
      ,@body))
 
 ;;; **************************************************************************
@@ -280,6 +280,7 @@ maximum-value."
 ;; Methods
 
 (defmethod use-object ((creature Player) map (object (eql nil)))
+  (declare (ignore object))
   (display-message *game* "Err. There's NOTHING in here. Literally."))
 
 (defmethod use-object ((creature Player) map object)

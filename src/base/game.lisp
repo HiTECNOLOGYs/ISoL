@@ -21,6 +21,8 @@
 ;;;  Game object. Creating, saving, loading game state
 ;;; **************************************************************************
 
+(defvar *game*)
+
 (defclass Game ()
   ((map :initarg :map
         :accessor game-map)
