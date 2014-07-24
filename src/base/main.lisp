@@ -18,7 +18,6 @@
 (in-package :isol)
 
 (defvar *game*)
-(defvar *game-version*)
 
 (defun exit-game (game)
   (declare (ignore game))
@@ -49,9 +48,10 @@
 
 (defun main ()
   "Start point."
-  (let* ((game (new-game :map (gen-new-map :testing)))
+  (let+ ((game (new-game :map (gen-new-map :testing)))
          (game-version (asdf:component-version (asdf:find-system :isol)))
-         (scene (game-scene :frame 'game-scene
-                            :game game)))
+         ((:values scene context) (game-scene :frame 'game-scene
+                                              :game game)))
     (push-scene scene game)
+    (push-context context game)
     (run-game game game-version)))

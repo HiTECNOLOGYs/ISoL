@@ -35,6 +35,8 @@
               :accessor game-creatures)
    (scenes :initform nil
            :accessor game-scenes)
+   (contexts :initform nil
+             :accessor game-contexts)
    (log :initform nil
         :accessor game-log))
   (:documentation "Stores necessary info about current game."))

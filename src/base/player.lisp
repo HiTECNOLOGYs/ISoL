@@ -26,6 +26,18 @@
   (:documentation "Player character."))
 
 ;;; **************************************************************************
+;;;  Macros
+;;; **************************************************************************
+
+(defmacro with-relative-object ((map player object dx dy) &body body)
+  "Finds object using coordinate system relative to player and binds this
+object to `object'. Also binds object's true coordinates to X and Y."
+  `(let* ((x (+ (object-x ,player) ,dx))
+          (y (+ (object-y ,player) ,dy))
+          (object (map-cell-top ,map x y)))
+     ,@body))
+
+;;; **************************************************************************
 ;;;  Info
 ;;; **************************************************************************
 
@@ -157,15 +169,17 @@ maximum-value."
 ;;; **************************************************************************
 
 (define-key-handler open-inventory (#\i :game)
-  (let* ((scene (inventory-scene :frame 'inventory-menu
-                                 :input-mode :inventory))
-         (context (scene-context scene)))
+  (multiple-value-bind (scene context)
+      (inventory-scene :frame 'inventory-menu
+                       :input-mode :inventory)
     (with-context context
       (setf (context-var :selected-item) 0)
       (push-scene scene game)
+      (push-context context game)
       (display-scene scene))))
 
 (define-key-handler close-inventory (#\q :inventory)
+  (pop-context game)
   (display-scene (pop-scene game)))
 
 (define-key-handler inventory-previous-tab (#\< :inventory)
@@ -208,11 +222,9 @@ maximum-value."
 ;; Picking up
 
 (defmethod pick-up-object ((player Player) map)
-  (destructuring-bind (x y) (location player)
-    (awhen (map-cell-top map x y)
-      (when (takable-p it)
-        (push (pop-object map x y)
-              (inventory player))))))
+  (with-relative-object (map player object 0 0)
+    (when (and object (takable-p object))
+      (push (pop-object map x y) (inventory player)))))
 
 (define-player-key-handler pc-pick-object (#\; :game)
   (pick-up-object player map))

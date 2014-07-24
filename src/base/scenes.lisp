@@ -43,10 +43,24 @@ obvious way to save necessary data until dispatcher is called again."
   "SETF-function for CONTEXT-VAR."
   (setf (gethash var (context-variables *context*)) new-value))
 
-(defun make-context (&key game input-mode)
+(defun make-context (&key (game *game*) (input-mode *input-mode*))
   (make-instance 'Context
                  :game game
                  :input-mode input-mode))
+
+(defgeneric game-current-context (object)
+  (:method ((object Game))
+    (first (game-contexts object))))
+
+(defgeneric push-context (context object)
+  (:method ((context Context) (object game))
+    (push context (game-contexts object))
+    context))
+
+(defgeneric pop-context (object)
+  (:method ((object Game))
+    (pop (game-contexts object))
+    (game-current-context object)))
 
 (defmacro with-context (context &body body)
   "Binds game and key bindsings to given symbols, sets current context
@@ -61,27 +75,14 @@ obvious way to save necessary data until dispatcher is called again."
 (defclass Scene ()
   ((frame :initarg :frame
           :accessor scene-frame)
-   (context :initarg :context
-            :accessor scene-context)
    (dispatcher :initarg :dispatcher
                :accessor scene-dispatcher))
   (:documentation "Stores information about current scene."))
 
-(defun keybindings-list->hash-table (list)
-  (let ((*keys* (make-hash-table)))
-    (iter
-      (for (key binding) in list)
-      (after-each
-        (bind-key key binding)))
-    *keys*))
-
-(defun make-scene (function &key frame game input-mode)
-  (let* ((context (make-context :game game
-                                :input-mode input-mode)))
-    (make-instance 'Scene
-                   :frame frame
-                   :dispatcher function
-                   :context context)))
+(defun make-scene (function &key frame)
+  (make-instance 'Scene
+                 :frame frame
+                 :dispatcher function))
 
 (defgeneric game-current-scene (object)
   (:method ((object Game))
@@ -98,8 +99,8 @@ obvious way to save necessary data until dispatcher is called again."
 
 (defgeneric pop-scene (object)
   (:method ((object Game))
-   (pop (game-scenes object))
-   (game-current-scene object)))
+    (pop (game-scenes object))
+    (game-current-scene object)))
 
 (defgeneric run-scene (object)
   (:method ((scene Scene))
@@ -107,8 +108,8 @@ obvious way to save necessary data until dispatcher is called again."
       (funcall (scene-dispatcher scene))))
   (:method ((game Game))
     (run-scene (game-current-scene game)))
-  (:method :around ((scene Scene))
-    (with-context (scene-context scene)
+  (:method :around ((game Game))
+    (with-context (game-current-context game)
       (call-next-method))))
 
 (defgeneric game-tick (object)
@@ -129,10 +130,10 @@ initialized."
            (with-input-mode (context-input-mode *context*)
              ,@body)))
        (defun ,name (&key frame (game *game*) (input-mode *input-mode*))
-         (make-scene ',handler-name
-                     :frame frame
-                     :game game
-                     :input-mode input-mode)))))
+         (values (make-scene ',handler-name
+                             :frame frame)
+                 (make-context :game game
+                               :input-mode input-mode))))))
 
 (defscene game-scene
   "Game step. Draws map, PC, stuff and prompts player for action."
