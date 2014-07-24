@@ -51,7 +51,8 @@
   (let+ ((game (new-game :map (gen-new-map :testing)))
          (game-version (asdf:component-version (asdf:find-system :isol)))
          ((:values scene context) (game-scene :frame 'game-scene
-                                              :game game)))
+                                              :game game
+                                              :input-mode :game)))
     (push-scene scene game)
     (push-context context game)
     (run-game game game-version)))
