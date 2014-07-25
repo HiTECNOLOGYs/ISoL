@@ -117,7 +117,3 @@
           (cl-tui:with-attributes (:underline) frame
             (put-text frame 1 (+ i 3) item-display-text))
           (put-text frame 1 (+ i 3) item-display-text))))))
-
-(defun crafting-callback (&key frame)
-  (cl-tui:draw-tab-bar 'inventory-menu
-                       :top-padding 1))
