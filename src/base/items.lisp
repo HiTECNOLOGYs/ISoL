@@ -63,4 +63,4 @@
          :accessor size)
    (items :initarg :items
           :accessor items))
-  (:documentation "This is like additional inventory. Main indevtory is limited in size so this stuff cound be very useful.")) 
+  (:documentation "This is like additional inventory. Main inventory is limited in size so this stuff cound be very useful."))
