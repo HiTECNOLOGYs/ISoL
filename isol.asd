@@ -35,7 +35,9 @@
                (:file "utilities")
                (:module base
                 :serial t
-                :components ((:file "objects")
+                :components ((:file "game")
+                             (:file "contexts")
+                             (:file "objects")
                              (:file "items")
                              (:file "map")
                              (:file "object-generation")
@@ -45,7 +47,6 @@
                              (:file "frames")
                              (:file "graphics")
                              (:file "user-interaction")
-                             (:file "game")
                              (:file "scenes")
                              (:file "main")))))
 
