@@ -55,6 +55,24 @@
          initargs))
 
 ;;; **************************************************************************
+;;;  Contexts
+;;; **************************************************************************
+
+(defgeneric game-current-context (object)
+  (:method ((object Game))
+    (first (game-contexts object))))
+
+(defgeneric push-context (context object)
+  (:method ((context Context) (object game))
+    (push context (game-contexts object))
+    context))
+
+(defgeneric pop-context (object)
+  (:method ((object Game))
+    (pop (game-contexts object))
+    (game-current-context object)))
+
+;;; **************************************************************************
 ;;;  Messages
 ;;; **************************************************************************
 
