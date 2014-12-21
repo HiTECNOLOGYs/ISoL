@@ -19,7 +19,8 @@
   :author "Mark Fedurin <hitecnologys@gmail.com>"
   :license "GPL v3"
   :version (:read-file-form "version.lisp-expr")
-  :depends-on (:cl-tui
+  :depends-on (:sdl2
+               :sdl2kit
                :cl-store
                :alexandria
                :iterate
