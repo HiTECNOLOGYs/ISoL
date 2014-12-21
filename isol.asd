@@ -1,6 +1,5 @@
 ;;; Copyright (C) Mark Fedurin, 2011-2014.
-;;;
-;;; This file is part of ISoL.
+;;; ;;; This file is part of ISoL.
 ;;;
 ;;; ISoL is free software: you can redistribute it and/or modify
 ;;; it under the terms of the GNU General Public License as published by
@@ -35,20 +34,37 @@
                (:file "utilities")
                (:module base
                 :serial t
-                :components ((:file "game")
-                             (:file "contexts")
-                             (:file "objects")
-                             (:file "items")
-                             (:file "map")
-                             (:file "object-generation")
-                             (:file "map-generation")
-                             (:file "keyboard")
-                             (:file "player")
-                             (:file "frames")
-                             (:file "graphics")
-                             (:file "user-interaction")
-                             (:file "scenes")
-                             (:file "main")))))
+                :components ((:module "engine"
+                                      :components ((:file "contexts")
+                                                   (:file "graphics"
+                                                          :depends-on ("contexts"))
+                                                   (:file "keyboard"
+                                                          :depends-on ("contexts"))
+                                                   (:file "ui"
+                                                          :depends-on ("graphics"
+                                                                       "keyboard"))
+                                                   (:file "scenes"
+                                                          :depends-on ("ui"))
+                                                   (:file "game"
+                                                          :depends-on ("scenes"))))
+                             ;; ----------------
+                             (:module "world"
+                                      :serial t
+                                      :components ((:file "entities")
+                                                   (:file "items")
+                                                   (:file "creatures")
+                                                   (:file "map")
+                                                   (:file "items-genertion")
+                                                   (:file "creatures-generation")
+                                                   (:file "map-generation")
+                                                   (:file "world")))
+                             ;; ----------------
+                             (:module "game"
+                                      :serial t
+                                      :components ((:file "characters")
+                                                   (:file "scenes")
+                                                   (:file "controls")))
+                             (:file "isol")))))
 
 (defsystem :isol/tests
   :description "Set of unit-tests for ISoL."

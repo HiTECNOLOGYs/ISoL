@@ -172,3 +172,23 @@
     (when (or (<= x-size door-position)
               (<= y-size door-position))
       (error "Hey! Door position is bigger than the room!"))))
+
+;;; **************************************************************************
+;;;  Map matrix
+;;; **************************************************************************
+;;;
+;;; Generation starts with making random array of some size that determines
+;;; distribution of sites on the map.
+
+(defun make-map-matrix (x y)
+  (make-array (list y x)
+              :initial-element 0))
+
+(defun initialize-map-matrix (map-matrix max-weight)
+  (doarray* (i cell map-matrix)
+    (setf cell (random max-weight))))
+
+(defun filter-map-matrix (map-matrix filter-threshold)
+  (doarray* (i cell map-matrix)
+    (when (< cell filter-threshold)
+      (setf cell 0))))
