@@ -18,102 +18,64 @@
 (in-package :isol)
 
 ;;; **************************************************************************
-;;;  Some stuff
+;;;  Graphics initialization and deinitialization
 ;;; **************************************************************************
 
-(defun get-screen-size ()
-  "Returns size of terminal screen."
-  (cl-tui:frame-size))
+(defun init-graphics ()
+  (sdl2.kit:start))
 
-(defun get-screen-center ()
-  (destructuring-bind (x y) (get-screen-size)
-    (list (truncate x 2)
-          (truncate y 2))))
-
-(defun screen-size-sufficient-p ()
-  (destructuring-bind (y x) (get-screen-size)
-    (and (<= 80 x) (<= 40 y))))
-
-(defun clear-screen ()
-  (cl-tui:clear cl-tui::*display*))
-
-(defun redraw-screen ()
-  (cl-tui:refresh))
-
-(defun display (&optional (frame :root))
-  (cl-tui:display frame))
-
-(defun put-text (frame x y format-string &rest format-args)
-  (apply #'cl-tui:put-text frame y x format-string format-args))
-
-(defun put-char (frame x y char)
-  (cl-tui:put-char frame y x char))
+(defun deinit-graphics ()
+  (sdl2.kit:quit))
 
 ;;; **************************************************************************
-;;;  Callbacks
+;;;  Windows
 ;;; **************************************************************************
 
-;; ----------------
-;; Helper functions
+(defclass Window (sdl2.kit:window)
+  ((size-x :initarg :size-x)
+   (size-y :initarg :size-y)))
 
-(defun draw-map (frame map)
-  (iter
-    (for line in (render-map map))
-    (for y from 0)
-    (after-each
-      (iter
-        (for char in line)
-        (for x from 0)
-        (after-each
-          (put-char frame x y char))))))
+(defun display-window (window)
+  (sdl2.kit:render window))
 
-(defun draw-player (frame player)
-  (with-slots (display-character location) player
-    (destructuring-bind (x y) location
-      (put-char frame x y display-character))))
+(defun make-window (class &rest arguments)
+  (apply #'make-instance class arguments))
 
-(defun draw-player-info (frame player)
-  (iter
-    (for line in (player-info player))
-    (for y from 0)
-    (after-each
-      (put-text frame 0 y line))))
+(defmacro define-window (name (&rest additional-parents) &body slots)
+  `(defclass ,name (Window ,@additional-parents)
+     (,@slots)))
 
-;; ----------------
-;; Callbacks
+(defmacro define-window-init (name &body body)
+  `(defmethod initialize-instance ((window ,name) &key &allow-other-keys)
+     (call-next-method)
+     ,@body))
 
-(defun game-map-callback (&key frame)
-  (draw-map frame (game-map *game*))
-  (draw-player frame (game-player *game*)))
+(defmacro define-window-render (name &body body)
+  `(defmethod sdl2.kit:render ((window ,name))
+     ,@body))
 
-(defun player-info-callback (&key frame)
-  (draw-player-info frame (game-player *game*)))
+(defmacro define-window-close (name &body body)
+  `(defmethod sdl2.kit:close-window ((window ,name))
+     ,@body))
 
-(defun game-log-callback (&key frame h)
-  (iter
-    (for message in (first-n (1- h) (game-log *game*)))
-    (with y = 0)
-    (after-each
-      (when message
-        (incf y)
-        (put-text frame 0 y "> ~A" (ensure-string-within-length h message))))))
+;;; TODO Move FPS somewhere where I can tweak it easily.
+(defmethod initialize-instance :after ((window Window) &key &allow-other-keys)
+  (setf (idle-render display) t)
+  ;; SDL
+  (sdl2:gl-set-swap-interval 60) ; FPS
+  ;; OpenGL
+  (gl:matrix-mode :projection)
+  (gl:load-identity)
+  (gl:viewport 0 0 (width display) (height display))
+  (with-slots (size-x size-y) window
+    (glu:ortho-2d 0 size-x 0 size-y))
+  (gl:matrix-mode :modelview)
+  (gl:load-identity)
+  (gl:enable :texture-2d
+             :blend
+             :multisample)
+  (gl:hint :texture-compression-hint :nicest)
+  (gl:blend-func :src-alpha :one-minus-src-alpha)
+  (gl:clear-color 0.0 0.0 0.0 1.0))
 
-(defun items-callback (&key frame)
-  (cl-tui:draw-tab-bar 'inventory-menu
-                       :top-padding 1)
-  (with-slots (inventory) (game-player *game*)
-    (iter
-      (with max-length = (if (emptyp inventory)
-                           0
-                           (reduce #'max inventory
-                                   :key (compose #'length #'name))))
-      (for item in inventory)
-      (for i from 0)
-      (for item-display-text next (format nil "~A~vT"
-                                          (name item) max-length))
-      (after-each
-        ;; x = 1 is just for small nice padding, it's temporary
-        (if (= i (context-var :selected-item))
-          (cl-tui:with-attributes (:underline) frame
-            (put-text frame 1 (+ i 3) item-display-text))
-          (put-text frame 1 (+ i 3) item-display-text))))))
+

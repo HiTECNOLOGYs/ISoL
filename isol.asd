@@ -21,6 +21,8 @@
   :version (:read-file-form "version.lisp-expr")
   :depends-on (:sdl2
                :sdl2kit
+               :cl-opengl
+               :cl-glu
                :opticl
                :cl-store
                :alexandria
