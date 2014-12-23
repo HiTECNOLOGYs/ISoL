@@ -78,4 +78,25 @@
   (gl:blend-func :src-alpha :one-minus-src-alpha)
   (gl:clear-color 0.0 0.0 0.0 1.0))
 
+;;; **************************************************************************
+;;;  Textures
+;;; **************************************************************************
 
+(defclass Texture ()
+  ((pointer :initarg :pointer)))
+
+(defun make-texture (target mipmap-level image &key border?)
+  (with-slots (width height channels format data) image
+    (let ((data-vector (make-array (* width height 4)
+                                   :element-type '(unsigned-byte 8)
+                                   :displaced-to data))
+          (texture (first (gl:gen-textures 1))))
+      (gl:bind-texture target texture)
+    (gl:tex-parameter target :generate-mipmap t)
+    (gl:tex-parameter target :texture-max-anisotropy-ext 16)
+    (gl:tex-parameter target :texture-min-filter :linear-mipmap-linear)
+    (gl:tex-image-2d target mipmap-level
+                     format width height (if border? 1 0)
+                     format :unsigned-byte
+                     data-vector))
+    (make-instance 'Texture :pointer texture)))
