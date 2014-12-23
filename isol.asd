@@ -21,6 +21,7 @@
   :version (:read-file-form "version.lisp-expr")
   :depends-on (:sdl2
                :sdl2kit
+               :opticl
                :cl-store
                :alexandria
                :iterate
@@ -37,8 +38,10 @@
                 :serial t
                 :components ((:module "engine"
                                       :components ((:file "contexts")
+                                                   (:file "resources")
                                                    (:file "graphics"
-                                                          :depends-on ("contexts"))
+                                                          :depends-on ("contexts"
+                                                                       "resources"))
                                                    (:file "keyboard"
                                                           :depends-on ("contexts"))
                                                    (:file "ui"
