@@ -132,3 +132,9 @@
                          format :unsigned-byte
                          pointer))
       (make-instance 'Texture :pointer texture))))
+
+(defgeneric enable-texture (target texture))
+
+(defmethod enable-texture (target (texture Texture))
+  (with-slots (pointer) texture
+    (gl:bind-texture target pointer)))
