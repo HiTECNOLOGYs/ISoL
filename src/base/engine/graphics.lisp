@@ -109,18 +109,26 @@
 (defclass Texture ()
   ((pointer :initarg :pointer)))
 
+(defun copy-image-to-foreign-memory (pointer image)
+  (with-slots (width height channels data) image
+    (opticl:do-pixels (i j) data
+      (multiple-value-bind (r g b a) (opticl:pixel data i j)
+        (setf (cffi:mem-aref pointer :unsigned-char (* 4 (+ (* j width) i))) r
+              (cffi:mem-aref pointer :unsigned-char (+ 1 (* 4 (+ (* j width) i)))) g
+              (cffi:mem-aref pointer :unsigned-char (+ 2 (* 4 (+ (* j width) i)))) b
+              (cffi:mem-aref pointer :unsigned-char (+ 3(* 4 (+ (* j width) i)))) a)))))
+
 (defun make-texture (target mipmap-level image &key border?)
   (with-slots (width height channels format data) image
-    (let ((data-vector (make-array (* width height 4)
-                                   :element-type '(unsigned-byte 8)
-                                   :displaced-to data))
-          (texture (first (gl:gen-textures 1))))
+    (let ((texture (first (gl:gen-textures 1))))
       (gl:bind-texture target texture)
-    (gl:tex-parameter target :generate-mipmap t)
-    (gl:tex-parameter target :texture-max-anisotropy-ext 16)
-    (gl:tex-parameter target :texture-min-filter :linear-mipmap-linear)
-    (gl:tex-image-2d target mipmap-level
-                     format width height (if border? 1 0)
-                     format :unsigned-byte
-                     data-vector))
-    (make-instance 'Texture :pointer texture)))
+      (gl:tex-parameter target :generate-mipmap t)
+      (gl:tex-parameter target :texture-max-anisotropy-ext 16)
+      (gl:tex-parameter target :texture-min-filter :linear-mipmap-linear)
+      (cffi:with-foreign-object (pointer :unsigned-char (* width height channels))
+        (copy-image-to-foreign-memory pointer image)
+        (gl:tex-image-2d target mipmap-level
+                         format width height (if border? 1 0)
+                         format :unsigned-byte
+                         pointer))
+      (make-instance 'Texture :pointer texture))))
