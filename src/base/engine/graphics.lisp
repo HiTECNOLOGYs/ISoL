@@ -31,12 +31,9 @@
 ;;;  Windows
 ;;; **************************************************************************
 
-(defclass Window (sdl2.kit:window)
+(defclass Window (sdl2.kit:gl-window)
   ((size-x :initarg :size-x)
    (size-y :initarg :size-y)))
-
-(defun display-window (window)
-  (sdl2.kit:render window))
 
 (defun make-window (class &rest arguments)
   (apply #'make-instance class arguments))
@@ -46,8 +43,7 @@
      (,@slots)))
 
 (defmacro define-window-init (name &body body)
-  `(defmethod initialize-instance ((window ,name) &key &allow-other-keys)
-     (call-next-method)
+  `(defmethod initialize-instance :after ((window ,name) &key &allow-other-keys)
      ,@body))
 
 (defmacro define-window-render (name &body body)
@@ -59,24 +55,26 @@
      ,@body))
 
 ;;; TODO Move FPS somewhere where I can tweak it easily.
-(defmethod initialize-instance :after ((window Window) &key &allow-other-keys)
-  (setf (idle-render display) t)
-  ;; SDL
-  (sdl2:gl-set-swap-interval 60) ; FPS
+(defmethod initialize-instance ((window Window) &key &allow-other-keys)
+  (call-next-method)
+  (setf (sdl2.kit:idle-render window) t)
   ;; OpenGL
+  ;(with-slots (size-x size-y) window
+  ;  (gl:viewport 0 0 size-x size-y))
+  (gl:viewport 0 0 640 480)
   (gl:matrix-mode :projection)
-  (gl:load-identity)
-  (gl:viewport 0 0 (width display) (height display))
-  (with-slots (size-x size-y) window
-    (glu:ortho-2d 0 size-x 0 size-y))
+  (gl:ortho -2 2 -2 2 -2 2)
   (gl:matrix-mode :modelview)
-  (gl:load-identity)
   (gl:enable :texture-2d
-             :blend
-             :multisample)
+             :blend)
+  (gl:disable :multisample
+              :multisample-arb)
   (gl:hint :texture-compression-hint :nicest)
   (gl:blend-func :src-alpha :one-minus-src-alpha)
-  (gl:clear-color 0.0 0.0 0.0 1.0))
+  (gl:load-identity))
+
+(defmethod sdl2.kit:close-window ((window Window))
+  (call-next-method))
 
 ;;; **************************************************************************
 ;;;  VBOs
