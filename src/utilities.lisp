@@ -89,3 +89,10 @@ Binds `x-var' to current x position and `y-var' to current y position."
 (define-modify-macro mod-incf (divisor &optional (n 1)) mod+)
 
 (define-modify-macro mod-decf (divisor &optional (n 1)) mod-)
+
+(defmacro with-foreign-vector ((var type data) &body body)
+  `(cffi:with-foreign-object (,var ,type #1=(length data))
+     (loop for elt across ,data
+           for i from 0 below #1#
+           doing (setf (cffi:mem-aref ,var ,type i) elt))
+     ,@body))

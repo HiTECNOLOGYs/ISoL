@@ -79,6 +79,32 @@
   (gl:clear-color 0.0 0.0 0.0 1.0))
 
 ;;; **************************************************************************
+;;;  VBOs
+;;; **************************************************************************
+
+(defclass VBO ()
+  ((pointer :initarg :pointer)))
+
+(defun gen-buffers-arb (count)
+  (cffi:with-foreign-object (buffer-array '%gl:uint count)
+    (%gl:gen-buffers-arb count buffer-array)
+    (loop for i below count
+          collecting (cffi:mem-aref buffer-array '%gl:uint))))
+
+(defun make-vbo (target size data usage)
+  (let ((buffer-arb (first (gen-buffers-arb 1))))
+    (%gl:bind-buffer-arb target buffer-arb)
+    (with-foreign-vector (buffer '%gl:uint data)
+      (%gl:buffer-data-arb target size buffer usage))
+    (make-instance 'VBO :pointer buffer-arb)))
+
+(defgeneric enable-vbo (target vbo))
+
+(defmethod enable-vbo (target (vbo VBO))
+  (with-slots (pointer) vbo
+    (%gl:bind-buffer-arb target pointer)))
+
+;;; **************************************************************************
 ;;;  Textures
 ;;; **************************************************************************
 
