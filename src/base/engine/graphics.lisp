@@ -59,9 +59,8 @@
   (call-next-method)
   (setf (sdl2.kit:idle-render window) t)
   ;; OpenGL
-  ;(with-slots (size-x size-y) window
-  ;  (gl:viewport 0 0 size-x size-y))
-  (gl:viewport 0 0 640 480)
+  (with-slots (size-x size-y) window
+    (gl:viewport 0 0 size-x size-y))
   (gl:matrix-mode :projection)
   (gl:ortho -2 2 -2 2 -2 2)
   (gl:matrix-mode :modelview)
