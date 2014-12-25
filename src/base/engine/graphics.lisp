@@ -91,10 +91,10 @@
     (loop for i below count
           collecting (cffi:mem-aref buffer-array '%gl:uint))))
 
-(defun make-vbo (target size data usage)
+(defun make-vbo (target size usage data &optional (data-type '%gl:float))
   (let ((buffer-arb (first (gen-buffers-arb 1))))
     (%gl:bind-buffer-arb target buffer-arb)
-    (with-foreign-vector (buffer '%gl:uint data)
+    (with-foreign-vector (buffer data-type data)
       (%gl:buffer-data-arb target size buffer usage))
     (make-instance 'VBO :pointer buffer-arb)))
 
