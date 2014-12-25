@@ -55,12 +55,15 @@
      ,@body))
 
 ;;; TODO Move FPS somewhere where I can tweak it easily.
-(defmethod initialize-instance ((window Window) &key &allow-other-keys)
-  (call-next-method)
+(defmethod initialize-instance :after ((window Window) &key size-x size-y
+                                                       &allow-other-keys)
   (setf (sdl2.kit:idle-render window) t)
   ;; OpenGL
-  (with-slots (size-x size-y) window
+  (with-slots ((window-size-x size-x) (window-size-y size-y)) window
+    (setf window-size-x size-x
+          window-size-y size-y)
     (gl:viewport 0 0 size-x size-y))
+  (gl:viewport 0 0 600 600)
   (gl:matrix-mode :projection)
   (gl:ortho -2 2 -2 2 -2 2)
   (gl:matrix-mode :modelview)
