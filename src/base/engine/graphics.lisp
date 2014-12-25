@@ -98,6 +98,12 @@
       (%gl:buffer-data-arb target size buffer usage))
     (make-instance 'VBO :pointer buffer-arb)))
 
+(defun make-vbos (target size usage &rest data)
+  (loop for dat in data
+        collecting (if (listp dat)
+                     (make-vbo target size usage (first dat) (second dat))
+                     (make-vbo target size usage dat))))
+
 (defgeneric enable-vbo (target vbo))
 
 (defmethod enable-vbo (target (vbo VBO))
