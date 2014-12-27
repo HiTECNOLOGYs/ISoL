@@ -135,8 +135,8 @@
     (let ((texture (first (gl:gen-textures 1))))
       (gl:bind-texture target texture)
       (gl:tex-parameter target :generate-mipmap t)
-      (gl:tex-parameter target :texture-max-anisotropy-ext 16)
       (gl:tex-parameter target :texture-min-filter :linear-mipmap-linear)
+      (gl:tex-parameter target :texture-mag-filter :nearest)
       (cffi:with-foreign-object (pointer :unsigned-char (* width height channels))
         (copy-image-to-foreign-memory pointer image)
         (gl:tex-image-2d target mipmap-level
