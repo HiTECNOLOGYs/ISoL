@@ -280,7 +280,8 @@
     (gl:push-matrix)
     (gl:load-identity)
     (gl:translate position-x position-y 0.0)
-    (gl:scale scale scale 1.0)
+    (destructuring-bind (x y) scale 
+      (gl:scale x y 1.0))
     (destructuring-bind (x y z) rotation
       (gl:rotate x 1.0 0.0 0.0)
       (gl:rotate y 0.0 1.0 0.0)
@@ -291,7 +292,7 @@
       (%gl:draw-arrays :quads 0 (slot-value vao 'length)))
     (gl:pop-matrix)))
 
-(defun make-sprite (texture x y &key (scale 1.0) (rotation (list 0.0 0.0 0.0)))
+(defun make-sprite (texture x y &key (scale (list 1.0 1.0)) (rotation (list 0.0 0.0 0.0)))
   (make-instance 'Sprite
                  :position-x x
                  :position-y y
