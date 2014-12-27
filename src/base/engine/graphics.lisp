@@ -119,7 +119,7 @@
 
 (defclass Texture ()
   ((pointer :initarg :pointer)
-   (coords :initarg :coords)))
+   (vao :initarg :vao)))
 
 (defun copy-image-to-foreign-memory (pointer image)
   (with-slots (width height channels data) image
@@ -130,7 +130,7 @@
               (cffi:mem-aref pointer :unsigned-char (+ 2 (* 4 (+ (* j width) i)))) b
               (cffi:mem-aref pointer :unsigned-char (+ 3(* 4 (+ (* j width) i)))) a)))))
 
-(defun make-texture (target mipmap-level image &key border?)
+(defun make-gl-texture (target mipmap-level image &key border?)
   (with-slots (width height channels format data) image
     (let ((texture (first (gl:gen-textures 1))))
       (gl:bind-texture target texture)
@@ -143,15 +143,74 @@
                          format width height (if border? 1 0)
                          format :unsigned-byte
                          pointer))
-      (make-instance 'Texture
-                     :pointer texture
-                     :coords (make-vao #(0.0 0.0 0.0 1.0
-                                         1.0 0.0 0.0 0.0
-                                         1.0 1.0 1.0 0.0
-                                         0.0 1.0 1.0 1.0))))))
+      texture)))
+
+(defun make-texture (target mipmap-level image &key border?)
+  (make-instance 'Texture
+                 :pointer (make-gl-texture target mipmap-level image :border? border?)
+                 :vao (make-vao #(0.0 0.0 0.0 1.0
+                                  1.0 0.0 0.0 0.0
+                                  1.0 1.0 1.0 0.0
+                                  0.0 1.0 1.0 1.0))))
 
 (defgeneric enable-texture (target texture))
 
 (defmethod enable-texture (target (texture Texture))
   (with-slots (pointer) texture
     (gl:bind-texture target pointer)))
+
+;;; **************************************************************************
+;;;  Texture atlases
+;;; **************************************************************************
+
+;;; TODO Make atlases support textures with unequal frames
+(defclass Texture-atlas (Texture)
+  ((n-frames-x :initarg :n-frames-x)
+   (n-frames-y :initarg :n-frames-y)
+   (current-frame-x :initarg :current-frame-x
+                    :initform 0)
+   (current-frame-y :initarg :current-frame-y
+                    :initform 0)
+   (frame-size-x)
+   (frame-size-y)
+   (all-vaos)))
+
+(defun calculate-atlas-rects (atlas)
+  (with-slots (frame-size-x frame-size-y n-frames-x n-frames-y) atlas
+    (loop
+      for i below n-frames-x
+      appending (loop
+                   for j below n-frames-y
+                   collecting (vector 0.0 0.0
+                                      (* frame-size-x i) (* frame-size-y (1+ j))
+                                      1.0 0.0
+                                      (* frame-size-x i) (* frame-size-y j)
+                                      1.0 1.0
+                                      (* frame-size-x (1+ i)) (* frame-size-y j)
+                                      0.0 1.0
+                                      (* frame-size-x (1+ i)) (* frame-size-y (1+ j)))))))
+
+(defun get-atlas-current-rect (atlas)
+  (with-slots (n-frames-y current-frame-x current-frame-y all-vaos) atlas
+    (nth (+ (* current-frame-y n-frames-y) current-frame-x) all-vaos)))
+
+(defmethod initialize-instance :after ((instance Texture-atlas) &key &allow-other-keys)
+  (with-slots (n-frames-x n-frames-y frame-size-x frame-size-y vao all-vaos) instance
+    (setf frame-size-x (/ 1.0 n-frames-x)
+          frame-size-y (/ 1.0 n-frames-y)
+          all-vaos     (apply #'make-vaos (calculate-atlas-rects instance))
+          vao          (get-atlas-current-rect instance))))
+
+(defgeneric switch-texture-frame (texture new-frame-x new-frame-y))
+
+(defmethod switch-texture-frame ((texture Texture-atlas) new-frame-x new-frame-y)
+  (with-slots (current-frame-x current-frame-y vao) texture
+    (setf current-frame-x new-frame-x
+          current-frame-y new-frame-y
+          vao (get-atlas-current-rect texture))))
+
+(defun make-texture-atlas (size-x size-y target mipmap-level image &key border?)
+  (make-instance 'Texture-atlas
+                 :pointer (make-gl-texture target mipmap-level image :border? border?)
+                 :n-frames-x size-x
+                 :n-frames-y size-y))
