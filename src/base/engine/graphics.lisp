@@ -167,10 +167,8 @@
 (defclass Texture-atlas (Texture)
   ((n-frames-x :initarg :n-frames-x)
    (n-frames-y :initarg :n-frames-y)
-   (current-frame-x :initarg :current-frame-x
-                    :initform 0)
-   (current-frame-y :initarg :current-frame-y
-                    :initform 0)
+   (current-frame-x :initarg :current-frame-x)
+   (current-frame-y :initarg :current-frame-y)
    (frame-size-x)
    (frame-size-y)
    (all-vaos)))
@@ -195,9 +193,16 @@
     (nth (+ (* current-frame-y n-frames-y) current-frame-x) all-vaos)))
 
 (defmethod initialize-instance :after ((instance Texture-atlas) &key &allow-other-keys)
-  (with-slots (n-frames-x n-frames-y frame-size-x frame-size-y vao all-vaos) instance
+  (with-slots (n-frames-x n-frames-y
+               current-frame-x current-frame-y
+               frame-size-x frame-size-y
+               vao all-vaos
+               sequence)
+      instance
     (setf frame-size-x (/ 1.0 n-frames-x)
           frame-size-y (/ 1.0 n-frames-y)
+          current-frame-x (first (first sequence))
+          current-frame-y (second (first sequence))
           all-vaos     (apply #'make-vaos (calculate-atlas-rects instance))
           vao          (get-atlas-current-rect instance))))
 
