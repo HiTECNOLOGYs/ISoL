@@ -250,3 +250,46 @@
                  :n-frames-y size-y
                  :sequence sequence
                  :frame-rate frame-rate))
+
+;;; **************************************************************************
+;;;  Sprites
+;;; **************************************************************************
+
+(defclass Sprite ()
+  ((position-x :initarg :position-x
+               :accessor sprite-position-x)
+   (position-y :initarg :position-y
+               :accessor sprite-position-y)
+   (scale :initarg :scale
+          :accessor sprite-scale)
+   (rotation :initarg :rotation
+             :accessor sprite-rotation)
+   (texture :initarg :texture
+            :accessor sprite-texture)))
+
+(defgeneric draw (object))
+
+(defmethod draw ((sprite Sprite))
+  ;; Sprites are mostly rectangles. At least rectangles are easier to work with.
+  (with-slots (position-x position-y scale rotation texture) sprite
+    (gl:push-matrix)
+    (gl:load-identity)
+    (gl:translate position-x position-y 0.0)
+    (gl:scale scale scale 1.0)
+    (destructuring-bind (x y z) rotation
+      (gl:rotate x 1.0 0.0 0.0)
+      (gl:rotate y 0.0 1.0 0.0)
+      (gl:rotate z 0.0 0.0 1.0))
+    (enable-texture :texture-2d texture)
+    (with-slots (vao) texture
+      (enable-vao vao)
+      (%gl:draw-arrays :quads 0 (slot-value vao 'length)))
+    (gl:pop-matrix)))
+
+(defun make-sprite (texture x y &key (scale 1.0) (rotation (list 0.0 0.0 0.0)))
+  (make-instance 'Sprite
+                 :position-x x
+                 :position-y y
+                 :scale scale
+                 :rotation rotation
+                 :texture texture))
