@@ -69,8 +69,7 @@
   (gl:matrix-mode :modelview)
   (gl:enable :texture-2d
              :blend)
-  (gl:disable :multisample
-              :multisample-arb)
+  (gl:disable :multisample)
   (gl:hint :texture-compression-hint :nicest)
   (gl:blend-func :src-alpha :one-minus-src-alpha)
   (gl:load-identity))
@@ -79,48 +78,53 @@
   (call-next-method))
 
 ;;; **************************************************************************
-;;;  VBOs
+;;;  VAOs
 ;;; **************************************************************************
 
-(defclass VBO ()
-  ((pointer :initarg :pointer)))
+(defclass VAO ()
+  ((pointer :initarg :pointer)
+   (length :initarg :length)))
 
-(defun gen-buffers-arb (count)
-  (cffi:with-foreign-object (buffer-array '%gl:uint count)
-    (%gl:gen-buffers-arb count buffer-array)
-    (loop for i below count
-          collecting (cffi:mem-aref buffer-array '%gl:uint))))
+(defun make-vao (data)
+  (let ((float-size 4)
+        (vao (gl:gen-vertex-array))
+        (vbo (first (gl:gen-buffers 1))))
+    (gl:bind-vertex-array vao)
+    (gl:bind-buffer :array-buffer vbo)
+    (with-foreign-vector (data-ptr :float data)
+      (%gl:buffer-data :array-buffer (* float-size (length data)) data-ptr :static-draw))
+    (gl:enable-client-state :vertex-array)
+    (%gl:vertex-pointer 2 :float (* 4 float-size) (cffi:make-pointer 0))
+    (gl:enable-client-state :texture-coord-array)
+    (%gl:tex-coord-pointer 2 :float (* 4 float-size) (cffi:make-pointer (* float-size 2)))
+    (gl:bind-vertex-array 0)
+    (gl:delete-buffers (list vbo))
+    (make-instance 'VAO
+                   :pointer vao
+                   :length (/ (length data) 4))))
 
-(defun make-vbo (target size usage data &optional (data-type '%gl:float))
-  (let ((buffer-arb (first (gen-buffers-arb 1))))
-    (%gl:bind-buffer-arb target buffer-arb)
-    (with-foreign-vector (buffer data-type data)
-      (%gl:buffer-data-arb target size buffer usage))
-    (make-instance 'VBO :pointer buffer-arb)))
-
-(defun make-vbos (target size usage &rest data)
+(defun make-vaos (&rest data)
   (loop for dat in data
-        collecting (if (listp dat)
-                     (make-vbo target size usage (first dat) (second dat))
-                     (make-vbo target size usage dat))))
+        collecting (make-vao dat)))
 
-(defgeneric enable-vbo (target vbo))
+(defgeneric enable-vao (vao))
 
-(defmethod enable-vbo (target (vbo VBO))
-  (with-slots (pointer) vbo
-    (%gl:bind-buffer-arb target pointer)))
+(defmethod enable-vao ((vao VAO))
+  (with-slots (pointer) vao
+    (gl:bind-vertex-array pointer)))
 
 ;;; **************************************************************************
 ;;;  Textures
 ;;; **************************************************************************
 
 (defclass Texture ()
-  ((pointer :initarg :pointer)))
+  ((pointer :initarg :pointer)
+   (coords :initarg :coords)))
 
 (defun copy-image-to-foreign-memory (pointer image)
   (with-slots (width height channels data) image
     (opticl:do-pixels (i j) data
-      (multiple-value-bind (r g b a) (opticl:pixel data i j)
+      (multiple-value-bind (r g b a) (opticl:pixel data (- width i 1) (- height j 1))
         (setf (cffi:mem-aref pointer :unsigned-char (* 4 (+ (* j width) i))) r
               (cffi:mem-aref pointer :unsigned-char (+ 1 (* 4 (+ (* j width) i)))) g
               (cffi:mem-aref pointer :unsigned-char (+ 2 (* 4 (+ (* j width) i)))) b
@@ -139,7 +143,12 @@
                          format width height (if border? 1 0)
                          format :unsigned-byte
                          pointer))
-      (make-instance 'Texture :pointer texture))))
+      (make-instance 'Texture
+                     :pointer texture
+                     :coords (make-vao #(0.0 0.0 0.0 1.0
+                                         1.0 0.0 0.0 0.0
+                                         1.0 1.0 1.0 0.0
+                                         0.0 1.0 1.0 1.0))))))
 
 (defgeneric enable-texture (target texture))
 
