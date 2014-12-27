@@ -21,9 +21,10 @@
 ;;;  Filesystem
 ;;; **************************************************************************
 
+(defparameter *system-dir* (asdf:component-pathname (asdf:find-system :isol)))
+
 (defun get-resources-dir-pathname ()
-  (merge-pathnames #p"res/"
-                   (asdf:component-pathname :isol)))
+  (merge-pathnames #p"../res/" *system-dir*))
 
 (defun resource (pathname)
   (merge-pathnames pathname (get-resources-dir-pathname)))
