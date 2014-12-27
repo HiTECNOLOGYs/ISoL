@@ -214,3 +214,39 @@
                  :pointer (make-gl-texture target mipmap-level image :border? border?)
                  :n-frames-x size-x
                  :n-frames-y size-y))
+
+;;; **************************************************************************
+;;;  Animations
+;;; **************************************************************************
+
+(defclass Animated-texture (Texture-atlas)
+  ((frame-rate :initarg :frame-rate)
+   (counter :initform 0)
+   (sequence :initarg :sequence)
+   (current-frame :initform 0)))
+
+(defgeneric next-frame (textute))
+(defgeneric animation-tick (texture))
+
+(defmethod next-frame ((texture Animated-texture))
+   (with-slots (sequence current-frame current-frame-x current-frame-y) texture
+     (mod-incf current-frame (length sequence))
+     (destructuring-bind (x y) (elt sequence current-frame)
+       (setf current-frame-x x
+             current-frame-y y))
+     (switch-texture-frame texture current-frame-x current-frame-y)))
+
+(defmethod animation-tick ((texture Animated-texture))
+  (with-slots (frame-rate counter) texture
+    (incf counter)
+    (when (<= counter frame-rate)
+      (setf counter 0)
+      (next-frame texture))))
+
+(defun make-animated-texture (size-x size-y sequence frame-rate target mipmap-level image &key border?)
+  (make-instance 'Animated-texture
+                 :pointer (make-gl-texture target mipmap-level image :border? border?)
+                 :n-frames-x size-x
+                 :n-frames-y size-y
+                 :sequence sequence
+                 :frame-rate frame-rate))
