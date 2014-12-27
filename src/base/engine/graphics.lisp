@@ -239,7 +239,7 @@
 (defmethod animation-tick ((texture Animated-texture))
   (with-slots (frame-rate counter) texture
     (incf counter)
-    (when (<= counter frame-rate)
+    (when (>= counter frame-rate)
       (setf counter 0)
       (next-frame texture))))
 
