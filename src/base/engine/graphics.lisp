@@ -54,6 +54,10 @@
   `(defmethod sdl2.kit:close-window ((window ,name))
      ,@body))
 
+(defmacro define-window-event-handler (name &body body)
+  `(defmethod sdl2.kit:window-event ((window ,name) type timestamp data1 data2)
+     ,@body))
+
 ;;; TODO Move FPS somewhere where I can tweak it easily.
 (defmethod initialize-instance :after ((window Window) &key size-x size-y
                                                        &allow-other-keys)
