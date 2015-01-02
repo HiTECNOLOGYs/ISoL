@@ -24,6 +24,7 @@
                :cl-opengl
                :cl-glu
                :opticl
+               :cl-cairo2
                :cl-store
                :alexandria
                :iterate

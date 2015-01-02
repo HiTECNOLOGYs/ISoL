@@ -133,6 +133,20 @@
                 (cffi:mem-aref pointer :unsigned-char b-index) b
                 (cffi:mem-aref pointer :unsigned-char a-index) a))))))
 
+(defun copy-cairo-image-to-foreign-memory (pointer data w h)
+  (dotimes (i h)
+    (dotimes (j w)
+      (let* ((pixel-start-index (* 4 (+ (* (- w j 1) w) i)))
+             (pixel-start-index-transpose (* 4 (+ (* (- h i 1) h) j)))
+             (r (aref data pixel-start-index))
+             (g (aref data (+ 1 pixel-start-index)))
+             (b (aref data (+ 2 pixel-start-index)))
+             (a (aref data (+ 3 pixel-start-index))))
+        (setf (cffi:mem-aref pointer :unsigned-char pixel-start-index-transpose) r
+              (cffi:mem-aref pointer :unsigned-char (+ 1 pixel-start-index-transpose)) g
+              (cffi:mem-aref pointer :unsigned-char (+ 2 pixel-start-index-transpose)) b
+              (cffi:mem-aref pointer :unsigned-char (+ 3 pixel-start-index-transpose)) a)))))
+
 (defun make-gl-texture (target mipmap-level image &key border?)
   (with-slots (width height channels format data) image
     (let ((texture (first (gl:gen-textures 1))))
@@ -141,7 +155,9 @@
       (gl:tex-parameter target :texture-min-filter :linear-mipmap-linear)
       (gl:tex-parameter target :texture-mag-filter :nearest)
       (cffi:with-foreign-object (pointer :unsigned-char (* width height channels))
-        (copy-image-to-foreign-memory pointer image)
+        (if (= (array-rank data) 1)
+          (copy-cairo-image-to-foreign-memory pointer data width height)
+          (copy-image-to-foreign-memory pointer image))
         (gl:tex-image-2d target mipmap-level
                          format width height (if border? 1 0)
                          format :unsigned-byte
