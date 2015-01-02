@@ -31,9 +31,7 @@
 ;;;  Windows
 ;;; **************************************************************************
 
-(defclass Window (sdl2.kit:gl-window)
-  ((size-x :initarg :size-x)
-   (size-y :initarg :size-y)))
+(defclass Window (sdl2.kit:gl-window) ())
 
 (defun make-window (class &rest arguments)
   (apply #'make-instance class arguments))
@@ -59,17 +57,13 @@
      ,@body))
 
 ;;; TODO Move FPS somewhere where I can tweak it easily.
-(defmethod initialize-instance :after ((window Window) &key size-x size-y
-                                                       &allow-other-keys)
+(defmethod initialize-instance :after ((window Window)
+                                       &key (w 800) (h 600) &allow-other-keys)
   (setf (sdl2.kit:idle-render window) t)
   ;; OpenGL
-  (with-slots ((window-size-x size-x) (window-size-y size-y)) window
-    (setf window-size-x size-x
-          window-size-y size-y)
-    (gl:viewport 0 0 size-x size-y))
-  (gl:viewport 0 0 600 600)
+  (gl:viewport 0 0 w h)
   (gl:matrix-mode :projection)
-  (gl:ortho -2 2 -2 2 -2 2)
+  (gl:ortho -1 1 -1 1 -1 1)
   (gl:matrix-mode :modelview)
   (gl:enable :texture-2d
              :blend)
@@ -284,7 +278,7 @@
     (gl:push-matrix)
     (gl:load-identity)
     (gl:translate position-x position-y 0.0)
-    (destructuring-bind (x y) scale 
+    (destructuring-bind (x y) scale
       (gl:scale x y 1.0))
     (destructuring-bind (x y z) rotation
       (gl:rotate x 1.0 0.0 0.0)
