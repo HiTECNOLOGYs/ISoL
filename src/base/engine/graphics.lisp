@@ -123,10 +123,15 @@
   (with-slots (width height channels data) image
     (opticl:do-pixels (i j) data
       (multiple-value-bind (r g b a) (opticl:pixel data (- width i 1) (- height j 1))
-        (setf (cffi:mem-aref pointer :unsigned-char (* 4 (+ (* j width) i))) r
-              (cffi:mem-aref pointer :unsigned-char (+ 1 (* 4 (+ (* j width) i)))) g
-              (cffi:mem-aref pointer :unsigned-char (+ 2 (* 4 (+ (* j width) i)))) b
-              (cffi:mem-aref pointer :unsigned-char (+ 3(* 4 (+ (* j width) i)))) a)))))
+        (let* ((pixel-start-index (* 4 (+ (* j width) i)))
+               (r-index pixel-start-index)
+               (g-index (+ 1 pixel-start-index))
+               (b-index (+ 2 pixel-start-index))
+               (a-index (+ 3 pixel-start-index)))
+          (setf (cffi:mem-aref pointer :unsigned-char r-index) r
+                (cffi:mem-aref pointer :unsigned-char g-index) g
+                (cffi:mem-aref pointer :unsigned-char b-index) b
+                (cffi:mem-aref pointer :unsigned-char a-index) a))))))
 
 (defun make-gl-texture (target mipmap-level image &key border?)
   (with-slots (width height channels format data) image
