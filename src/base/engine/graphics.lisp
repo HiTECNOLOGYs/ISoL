@@ -136,12 +136,12 @@
 (defun copy-cairo-image-to-foreign-memory (pointer data w h)
   (dotimes (i h)
     (dotimes (j w)
-      (let* ((pixel-start-index (* 4 (+ (* (- w j 1) w) i)))
-             (pixel-start-index-transpose (* 4 (+ (* (- h i 1) h) j)))
-             (r (aref data pixel-start-index))
-             (g (aref data (+ 1 pixel-start-index)))
-             (b (aref data (+ 2 pixel-start-index)))
-             (a (aref data (+ 3 pixel-start-index))))
+      (let* ((pixel-start-index (* 4 (+ (* (- h i 1) w) j)))
+             (pixel-start-index-transpose (* 4 (+ (* (- w j 1) h) i)))
+             (r (cffi:mem-aref data :unsigned-char pixel-start-index))
+             (g (cffi:mem-aref data :unsigned-char (+ 1 pixel-start-index)))
+             (b (cffi:mem-aref data :unsigned-char (+ 2 pixel-start-index)))
+             (a (cffi:mem-aref data :unsigned-char (+ 3 pixel-start-index))))
         (setf (cffi:mem-aref pointer :unsigned-char pixel-start-index-transpose) r
               (cffi:mem-aref pointer :unsigned-char (+ 1 pixel-start-index-transpose)) g
               (cffi:mem-aref pointer :unsigned-char (+ 2 pixel-start-index-transpose)) b
@@ -155,13 +155,19 @@
       (gl:tex-parameter target :texture-min-filter :linear-mipmap-linear)
       (gl:tex-parameter target :texture-mag-filter :nearest)
       (cffi:with-foreign-object (pointer :unsigned-char (* width height channels))
-        (if (= (array-rank data) 1)
-          (copy-cairo-image-to-foreign-memory pointer data width height)
-          (copy-image-to-foreign-memory pointer image))
-        (gl:tex-image-2d target mipmap-level
-                         format width height (if border? 1 0)
-                         format :unsigned-byte
-                         pointer))
+        (cond
+          ((cffi:pointerp data)
+           (copy-cairo-image-to-foreign-memory pointer data width height)
+           (gl:tex-image-2d target mipmap-level
+                            format height width (if border? 1 0)
+                            format :unsigned-byte
+                            pointer))
+          (t
+           (copy-image-to-foreign-memory pointer image)
+           (gl:tex-image-2d target mipmap-level
+                            format width height (if border? 1 0)
+                            format :unsigned-byte
+                            pointer))))
       texture)))
 
 (defun make-texture (target mipmap-level image &key border?)
@@ -318,3 +324,61 @@
                  :scale scale
                  :rotation rotation
                  :texture texture))
+
+;;; **************************************************************************
+;;;  Text
+;;; **************************************************************************
+
+(defclass Text (Sprite)
+  ((font :initarg :font
+         :initform "Times"
+         :accessor text-font)
+   (width :initarg :width
+          :accessor text-width)
+   (height :initarg :height
+           :accessor text-height)
+   (content :initarg :content
+            :accessor text-content)
+   (size :initarg :size
+         :initform nil
+         :accessor text-size)
+   (color :initarg :color
+          :initform (list 0 0 0 255)
+          :accessor text-color)
+   (context :accessor text-context)
+   (surface :accessor text-surface)))
+
+(defmethod initialize-instance :after ((instance Text) &rest initargs)
+  (declare (ignore initargs))
+  (with-slots (font color size content width height surface context texture) instance
+    (setf surface (cairo:create-image-surface :argb32 width height)
+          context (cairo:create-context surface))
+    (cairo:with-context (context)
+      (destructuring-bind (r g b a) color
+        (cairo:set-source-rgba r g b a))
+      (cairo:select-font-face font :normal :normal)
+      (cairo:set-font-size (or size (* 0.7 height)))
+      (cairo:move-to (* width 0.01) (* height 0.7))
+      (cairo:show-text content))
+    (let ((image (make-instance 'Image
+                                :format :rgba
+                                :channels 4
+                                :width width
+                                :height height
+                                :data (cairo:image-surface-get-data surface
+                                                                    :pointer-only t))))
+      (setf texture (make-texture :texture-2d 0 image)))))
+
+(defun make-text (content x y w h
+                  &key (font "Times") size
+                  (scale (list 1.0 1.0)) (rotation (list 0.0 0.0 0.0)))
+  (make-instance 'Text
+                 :content content
+                 :position-x x
+                 :position-y y
+                 :scale scale
+                 :rotation rotation
+                 :width w
+                 :height h
+                 :font font
+                 :size size))
