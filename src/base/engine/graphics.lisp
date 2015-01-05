@@ -344,30 +344,47 @@
          :accessor text-size)
    (color :initarg :color
           :initform (list 0 0 0 255)
-          :accessor text-color)
-   (context :accessor text-context)
-   (surface :accessor text-surface)))
+          :accessor text-color)))
+
+(defun draw-text (text)
+  (with-slots (font color size width height content) text
+    (let* ((surface (cairo:create-image-surface :argb32 width height))
+           (context (cairo:create-context surface)))
+      (cairo:with-context (context)
+        (destructuring-bind (r g b a) color
+          (cairo:set-source-rgba r g b a))
+        (cairo:select-font-face font :normal :normal)
+        (cairo:set-font-size (or size (* 0.7 height)))
+        (cairo:move-to (* width 0.01) (* height 0.7))
+        (cairo:show-text content))
+      (cairo:destroy context)
+      surface)))
+
+(defun render-text-texture (text)
+  (with-slots (width height texture) text
+    (let* ((surface (draw-text text))
+           (data (cairo:image-surface-get-data surface :pointer-only t))
+           (image (make-instance 'Image
+                                 :format :rgba
+                                 :channels 4
+                                 :width width
+                                 :height height
+                                 :data data)))
+      (setf texture (make-texture :texture-2d 0 image))
+      (cairo:destroy surface))))
 
 (defmethod initialize-instance :after ((instance Text) &rest initargs)
   (declare (ignore initargs))
-  (with-slots (font color size content width height surface context texture) instance
-    (setf surface (cairo:create-image-surface :argb32 width height)
-          context (cairo:create-context surface))
-    (cairo:with-context (context)
-      (destructuring-bind (r g b a) color
-        (cairo:set-source-rgba r g b a))
-      (cairo:select-font-face font :normal :normal)
-      (cairo:set-font-size (or size (* 0.7 height)))
-      (cairo:move-to (* width 0.01) (* height 0.7))
-      (cairo:show-text content))
-    (let ((image (make-instance 'Image
-                                :format :rgba
-                                :channels 4
-                                :width width
-                                :height height
-                                :data (cairo:image-surface-get-data surface
-                                                                    :pointer-only t))))
-      (setf texture (make-texture :texture-2d 0 image)))))
+  (with-slots (width height surface context texture) instance
+    (render-text-texture instance)))
+
+(defgeneric update-content (new-content instance))
+
+(defmethod update-content (new-content (instance Text))
+  (with-slots (content) instance
+    (setf content new-content)
+    (draw-text instance)
+    (render-text-texture instance)))
 
 (defun make-text (content x y w h
                   &key (font "Times") size
