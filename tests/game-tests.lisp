@@ -15,17 +15,5 @@
 ;;; You should have received a copy of the GNU General Public License
 ;;; along with ISoL.  If not, see <http://www.gnu.org/licenses/>.
 
-(in-package :isol)
-
-(fiveam:def-suite :isol)
-
-(fiveam:def-suite :isol.objects
-  :in :isol)
-(fiveam:def-suite :isol.map
-  :in :isol)
-(fiveam:def-suite :isol.player
-  :in :isol)
-(fiveam:def-suite :isol.graphics
-  :in :isol)
-(fiveam:def-suite :isol.game
-  :in :isol)
+(in-package :isol.tests)
+(in-suite :game-tests)

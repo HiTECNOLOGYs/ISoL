@@ -18,28 +18,21 @@
 (in-package :isol)
 
 ;;; **************************************************************************
-;;;  Game object. Creating, saving, loading game state
+;;;  Game class. Creating, saving, loading game state
 ;;; **************************************************************************
 
 (defvar *game*)
 
 (defclass Game ()
-  ((map :initarg :map
-        :accessor game-map)
-   (player :initarg :player
-           :initform (make-instance 'player :location (list 1 1))
-           :accessor game-player)
-   (creatures :initarg :creatures
-              :initform (make-hash-table)
-              :accessor game-creatures)
+  ((world :initarg :world
+          :initform (make-world)
+          :accessor game-world)
    (scenes :initform nil
            :accessor game-scenes)
    (contexts :initform nil
              :accessor game-contexts)
-   (log :initform nil
-        :accessor game-log)
-   (messages-buffer :initform nil
-                    :accessor game-messages-buffer))
+   (events :initform nil
+           :accessor game-events))
   (:documentation "Stores necessary info about current game."))
 
 (defun save-game (game pathname)
@@ -73,29 +66,33 @@
     (game-current-context object)))
 
 ;;; **************************************************************************
-;;;  Messages
+;;;  Scenes
 ;;; **************************************************************************
 
-(defun log-game-message (game format-string &rest format-args)
-  (push (apply #'format nil format-string format-args)
-        (game-log game)))
+(defgeneric game-current-scene (object)
+  (:method ((object Game))
+    (car (game-scenes object))))
 
-(defun display-message (game format-string &rest format-args)
-  (let ((string (apply #'format nil format-string format-args)))
-    (push string (game-messages-buffer game))
-    string))
+(defgeneric push-scene (scene object)
+  (:method ((scene Scene) (object Game))
+    (push scene (game-scenes object))
+    (game-current-scene object)))
 
-(defun flush-messages-to-minibuffer (game)
-  (let ((minibuffer-width (second (cl-tui:frame-size (cl-tui:frame 'minibuffer)))))
-    (with-slots (messages-buffer) game
-      (dolist (message messages-buffer (values))
-        (cl-tui:clear 'minibuffer)
-        (put-text 'minibuffer 0 0
-                  (ensure-string-within-length
-                    minibuffer-width message
-                    :replacement "[Press space]"
-                    :always-include-replacement? (> (length messages-buffer) 1)))
-        (redraw-screen)
-        (when (> (length messages-buffer) 1)
-          (wait-confirmation))
-        (log-game-message game (pop messages-buffer))))))
+(defgeneric pop-scene (object)
+  (:method ((object Game))
+    (pop (game-scenes object))
+    (game-current-scene object)))
+
+(defgeneric run-scene (object)
+  (:method ((scene Scene))
+    (when (slot-boundp scene 'dispatcher)
+      (funcall (scene-dispatcher scene))))
+  (:method ((game Game))
+    (run-scene (game-current-scene game)))
+  (:method :around ((game Game))
+    (with-context (game-current-context game)
+      (call-next-method))))
+
+(defgeneric game-tick (object)
+  (:method ((game Game))
+    (run-scene game)))

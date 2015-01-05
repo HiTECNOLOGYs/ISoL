@@ -22,7 +22,6 @@
   :depends-on (:sdl2
                :sdl2kit
                :cl-opengl
-               :cl-glu
                :opticl
                :cl-cairo2
                :cl-store
@@ -37,41 +36,47 @@
   :serial t
   :components ((:file "packages")
                (:file "utilities")
-               (:module base
+               (:module "engine"
+                :components ((:file "contexts")
+                             (:file "resources")
+                             (:file "graphics"
+                              :depends-on ("contexts"
+                                           "resources"))
+                             (:file "input"
+                              :depends-on ("contexts"))
+                             (:file "ui"
+                              :depends-on ("graphics"
+                                           "input"))
+                             (:file "scenes"
+                              :depends-on ("ui"))
+                             (:file "entities"
+                              :depends-on ("contexts"))
+                             (:file "items"
+                              :depends-on ("entities"))
+                             (:file "creatures"
+                              :depends-on ("items"))
+                             (:file "map"
+                              :depends-on ("creatures"))
+                             (:file "items-generation"
+                              :depends-on ("map"))
+                             (:file "creatures-generation"
+                              :depends-on ("items-generation"))
+                             (:file "map-generation"
+                              :depends-on ("creatures-generation"))
+                             (:file "world"
+                              :depends-on ("map-generation"))
+                             (:file "game"
+                              :depends-on ("scenes"
+                                           "world"))))
+               ;; ----------------
+               (:module "game"
                 :serial t
-                :components ((:module "engine"
-                                      :components ((:file "contexts")
-                                                   (:file "resources")
-                                                   (:file "graphics"
-                                                          :depends-on ("contexts"
-                                                                       "resources"))
-                                                   (:file "keyboard"
-                                                          :depends-on ("contexts"))
-                                                   (:file "ui"
-                                                          :depends-on ("graphics"
-                                                                       "keyboard"))
-                                                   (:file "scenes"
-                                                          :depends-on ("ui"))
-                                                   (:file "game"
-                                                          :depends-on ("scenes"))))
-                             ;; ----------------
-                             (:module "world"
-                                      :serial t
-                                      :components ((:file "entities")
-                                                   (:file "items")
-                                                   (:file "creatures")
-                                                   (:file "map")
-                                                   (:file "items-genertion")
-                                                   (:file "creatures-generation")
-                                                   (:file "map-generation")
-                                                   (:file "world")))
-                             ;; ----------------
-                             (:module "game"
-                                      :serial t
-                                      :components ((:file "characters")
-                                                   (:file "scenes")
-                                                   (:file "controls")))
-                             (:file "isol")))))
+                :components ((:file "world")
+                             (:file "characters")
+                             (:file "scenes")
+                             (:file "controls")))
+               ;; ----------------
+               (:file "isol")))
 
 (defsystem :isol/tests
   :description "Set of unit-tests for ISoL."
@@ -80,24 +85,23 @@
   :version (:read-file-form "version.lisp-expr")
   :depends-on (:fiveam
                :isol)
-  :pathname "src/"
+  :pathname "tests/"
   :serial t
   :components ((:file "packages")
-               (:module tests
-                :components ((:file "suites")
-                             (:file "utilities")
-                             (:file "objects-tests"
-                              :depends-on ("utilities"
-                                           "suites"))
-                             (:file "map-tests"
-                              :depends-on ("utilities"
-                                           "suites"))
-                             (:file "player-tests"
-                              :depends-on ("utilities"
-                                           "suites"))
-                             (:file "graphics-tests"
-                              :depends-on ("utilities"
-                                           "suites"))
-                             (:file "game-tests"
-                              :depends-on ("utilities"
-                                           "suites"))))))
+               (:file "suites")
+               (:file "utilities")
+               (:file "objects-tests"
+                :depends-on ("utilities"
+                             "suites"))
+               (:file "map-tests"
+                :depends-on ("utilities"
+                             "suites"))
+               (:file "player-tests"
+                :depends-on ("utilities"
+                             "suites"))
+               (:file "graphics-tests"
+                :depends-on ("utilities"
+                             "suites"))
+               (:file "game-tests"
+                :depends-on ("utilities"
+                             "suites"))))

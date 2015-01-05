@@ -15,8 +15,8 @@
 ;;; You should have received a copy of the GNU General Public License
 ;;; along with ISoL.  If not, see <http://www.gnu.org/licenses/>.
 
-(in-package :isol)
-(in-suite map-tests)
+(in-package :isol.tests)
+(in-suite :map-tests)
 
 (test test-object-generation
   (let ((instance (generate-object 'Wall)))

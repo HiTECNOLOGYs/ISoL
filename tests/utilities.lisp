@@ -15,7 +15,7 @@
 ;;; You should have received a copy of the GNU General Public License
 ;;; along with ISoL.  If not, see <http://www.gnu.org/licenses/>.
 
-(in-package :isol)
+(in-package :isol.tests)
 
 (defun gen-integer (&key (max (1+ most-positive-fixnum)) (min (1- most-negative-fixnum)))
   (+ min (random (1+ (- max min)))))

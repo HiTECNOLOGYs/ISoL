@@ -15,5 +15,5 @@
 ;;; You should have received a copy of the GNU General Public License
 ;;; along with ISoL.  If not, see <http://www.gnu.org/licenses/>.
 
-(in-package :isol)
-(in-suite game-tests)
+(in-package :isol.tests)
+(in-suite :player-tests)
