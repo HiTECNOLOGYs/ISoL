@@ -117,7 +117,7 @@
 ;; Macros
 
 (defmacro define-window-region-binding ((x1 y1 x2 y2) function)
-  `(bind-screen-region ,x1 ,y2 ,x2 ,y2 function))
+  `(bind-screen-region ,x1 ,y1 ,x2 ,y2 ,function))
 
 ;; ----------------
 ;; SDL macros
