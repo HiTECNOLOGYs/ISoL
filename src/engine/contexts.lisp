@@ -31,19 +31,43 @@ because scene might need switching while it does and there's not other
 obvious way to save necessary data until dispatcher is called again."
               :accessor context-variables)))
 
-(defun context-var (var)
+(defun context-var (var &optional default)
   "Returns value of contextual variables."
-  (gethash var (context-variables *context*)))
+  (gethash var (context-variables *context*) default))
 
 (defun (setf context-var) (new-value var)
   "SETF-function for CONTEXT-VAR."
   (setf (gethash var (context-variables *context*)) new-value))
 
-(defun make-context ()
-  (make-instance 'Context))
-
-(defmacro with-context (context &body body)
-  "Binds game and key bindsings to given symbols, sets current context
-(by binding it to *CONTEXT*)."
+(defmacro with-context ((context) &body body)
+  "Binds game and key bindsings to given symbols, sets current context (by
+binding it to *CONTEXT*)."
   `(let ((*context* ,context))
      ,@body))
+
+(defmacro do-context-vars ((name value context) &body body)
+  "Iterates though context variables."
+  `(maphash #'(lambda (,name ,value)
+                ,@body)
+            (context-variables ,context)))
+
+(defun make-context (&rest variables)
+  "Returns freshly made context with given  variables initialized."
+  (let ((context (make-instance 'Context)))
+    (with-context (context)
+      (loop
+        for (variable value) on variables by #'cddr
+        doing (setf (context-var variable) value)))
+    context))
+
+(defun copy-context (context &rest overwrites)
+  "Makes fresh context, copies variables from old one, replaces contents of
+some with overwrites, adds some new."
+  (let ((new-context (make-context)))
+    (with-context (new-context)
+      (do-context-vars (var value context)
+        (setf (context-var var) value))
+      (loop
+        for (var value) on overwrites by #'cddr
+        doing (setf (context-var var) value)))
+    new-context))
