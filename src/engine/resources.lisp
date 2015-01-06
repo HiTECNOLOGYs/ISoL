@@ -47,7 +47,7 @@
 ;;; TODO Implement support for other file formats
 (defun load-image (pathname)
   (let ((img (opticl:read-png-file pathname)))
-    (opticl:with-image-bounds (width height channels) img
+    (opticl:with-image-bounds (height width channels) img
       (make-instance 'Image
                      :data img
                      :width width
