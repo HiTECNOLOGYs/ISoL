@@ -24,7 +24,6 @@
 ;; ----------------
 ;; Modes
 
-(defvar *input-mode* :normal)
 (defvar *keys* (make-hash-table))
 
 (defun mode-keys (mode)
@@ -38,7 +37,7 @@
   (gethash (list* (code-char key) modifiers) (mode-keys mode)))
 
 (defun (setf key-binding) (function mode key modifiers)
-  (setf (gethash key (list* (mode-keys mode) modifiers)) function))
+  (setf (gethash (list* key modifiers) (mode-keys mode)) function))
 
 (defun bind-key (mode key modifiers function)
   "Binds given character to some function."
@@ -52,7 +51,7 @@
 
 (defun handle-key (key modifiers &rest arguments)
   "Runs function binded to some `key' with given arguments."
-  (awhen (key-binding *input-mode*
+  (awhen (key-binding (context-var :input-mode :normal)
                       (etypecase key
                         (integer key)
                         (character (char-code key))
@@ -65,8 +64,10 @@
 
 (defmacro with-input-mode (mode-name &body body)
   "Executes `body' with specific input mode enabled."
-  `(let ((*input-mode* ,mode-name))
-     ,@body))
+  (with-gensyms (context-gensym)
+    `(let ((,context-gensym (copy-context *context* :input-mode ,mode-name)))
+       (with-context (,context-gensym)
+         ,@body))))
 
 (defmacro define-input-mode (name &body bindings)
   "Adds new input mode and binds keys for it."

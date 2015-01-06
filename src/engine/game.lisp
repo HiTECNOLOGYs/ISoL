@@ -90,7 +90,7 @@
   (:method ((game Game))
     (run-scene (game-current-scene game)))
   (:method :around ((game Game))
-    (with-context (game-current-context game)
+    (with-context ((game-current-context game))
       (call-next-method))))
 
 (defgeneric game-tick (object)
