@@ -16,4 +16,4 @@
 ;;; along with ISoL.  If not, see <http://www.gnu.org/licenses/>.
 
 (in-package :isol.tests)
-(in-suite :game-tests)
+(in-suite :isol.tests.engine)

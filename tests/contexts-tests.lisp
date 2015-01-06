@@ -16,10 +16,12 @@
 ;;; along with ISoL.  If not, see <http://www.gnu.org/licenses/>.
 
 (in-package :isol.tests)
+(in-suite :isol.tests.engine)
 
-(fiveam:def-suite :isol.tests)
-
-(fiveam:def-suite :isol.tests.engine
-  :in :isol.tests)
-(fiveam:def-suite :isol.tests.game
-  :in :isol.tests)
+(test contexts
+  (let ((context (isol::make-context :test "foo")))
+    (isol::with-context (context)
+      (is (equal "foo" (isol::context-var :test))))
+    (isol::with-context ((isol::copy-context context :test "bar" :foo "foo"))
+      (is (equal "bar" (isol::context-var :test)))
+      (is (equal "foo" (isol::context-var :foo))))))

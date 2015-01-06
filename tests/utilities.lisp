@@ -16,6 +16,3 @@
 ;;; along with ISoL.  If not, see <http://www.gnu.org/licenses/>.
 
 (in-package :isol.tests)
-
-(defun gen-integer (&key (max (1+ most-positive-fixnum)) (min (1- most-negative-fixnum)))
-  (+ min (random (1+ (- max min)))))

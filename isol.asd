@@ -31,7 +31,7 @@
                :let+)
   :in-order-to ((test-op (load-op :isol/tests)))
   :perform (test-op (op component)
-             (asdf/package:symbol-call :fiveam :run! :isol))
+             (asdf/package:symbol-call :fiveam :run! :isol.tests))
   :pathname "src/"
   :serial t
   :components ((:file "packages")
@@ -90,7 +90,7 @@
   :components ((:file "packages")
                (:file "suites")
                (:file "utilities")
-               (:file "objects-tests"
+               (:file "contexts-tests"
                 :depends-on ("utilities"
                              "suites"))
                (:file "map-tests"

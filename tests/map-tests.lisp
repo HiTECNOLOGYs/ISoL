@@ -16,33 +16,4 @@
 ;;; along with ISoL.  If not, see <http://www.gnu.org/licenses/>.
 
 (in-package :isol.tests)
-(in-suite :map-tests)
-
-(test test-object-generation
-  (let ((instance (generate-object 'Wall)))
-    (is (equal (name instance)        "Wall"))
-    (is (equal (description instance) "Just rusty old stone wall."))
-    (is (=     (hp instance)          10000))
-    (is (eql   (material instance)    'stone))))
-
-(test (test-objects-manipulations :depends-on test-object-generation)
-  (let ((map (gen-empty-map)))
-    ;; ----------------
-    (is (push-object map 1 1 (generate-object 'Gun)))
-    (is (and (eql   (class-of (map-cell-top map 1 1)) (find-class 'Weapon))
-             (equal (name (map-cell-top map 1 1))     "Revolver")))
-    ;; ----------------
-    (is (push-object map 1 2 (generate-object 'Rock)))
-    (is (and (eql   (class-of (map-cell-top map 1 2)) (find-class 'Map-Object))
-             (equal (name (map-cell-top map 1 2))     "Rock")))
-    ;; ----------------
-    (is (equal (name (pop-object map 1 1)) "Revolver"))
-    (is (equal (name (pop-object map 1 2)) "Rock"))))
-
-(test (test-map-rendering :depends-on test-objects-manipulations)
-  (let ((map (gen-empty-map)))
-    (push-object map 1 1 (generate-object 'Gun))
-    (let ((rendered-map (render-map map)))
-      (is (eq (first  (first rendered-map))  #\.))
-      (is (eq (second (second rendered-map)) #\()))))
-
+(in-suite :isol.tests.engine)
