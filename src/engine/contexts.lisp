@@ -24,11 +24,7 @@
 (defvar *context*)
 
 (defclass Context ()
-  ((game :initarg :game
-         :accessor context-game)
-   (input-mode :initarg :input-mode
-               :accessor context-input-mode)
-   (variables :initform (make-hash-table)
+  ((variables :initform (make-hash-table)
               :documentation "This hash-table is used to save data between
 scene dispatcher iteration. Scene dispatcher can't go into infinite loop
 because scene might need switching while it does and there's not other
@@ -43,10 +39,8 @@ obvious way to save necessary data until dispatcher is called again."
   "SETF-function for CONTEXT-VAR."
   (setf (gethash var (context-variables *context*)) new-value))
 
-(defun make-context (&key (game *game*) (input-mode *input-mode*))
-  (make-instance 'Context
-                 :game game
-                 :input-mode input-mode))
+(defun make-context ()
+  (make-instance 'Context))
 
 (defmacro with-context (context &body body)
   "Binds game and key bindsings to given symbols, sets current context
