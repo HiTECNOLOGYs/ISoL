@@ -1,4 +1,4 @@
-;;; Copyright (C) Mark Fedurin, 2011-2014.
+;;; Copyright (C) Mark Fedurin, 2011-2015.
 ;;;
 ;;; This file is part of ISoL.
 ;;;

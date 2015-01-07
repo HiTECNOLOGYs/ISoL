@@ -11,7 +11,7 @@ project rather than an actual playable game.
 Copying
 -------
 
-Copyright (C) Mark Fedurin, 2011-2014.
+Copyright (C) Mark Fedurin, 2011-2015.
 
 ISoL in this context is an abbreviation of "In Search of Light" which is the
 full name of the game.  Both names hold the same meaning and can be used equally.
