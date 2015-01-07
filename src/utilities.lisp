@@ -96,3 +96,7 @@ Binds `x-var' to current x position and `y-var' to current y position."
            for i from 0 below #1#
            doing (setf (cffi:mem-aref ,var ,type i) elt))
      ,@body))
+
+(defun vector-push* (array &rest new-elements)
+  (dolist (elt new-elements array)
+    (vector-push elt array)))

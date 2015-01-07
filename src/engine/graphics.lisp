@@ -83,6 +83,11 @@
   ((pointer :initarg :pointer)
    (length :initarg :length)))
 
+(defmethod initialize-instance :after ((instance VAO) &rest initargs)
+  (declare (ignore initargs))
+  (let ((pointer (slot-value instance 'pointer)))
+    (sb-ext:finalize instance #'(lambda () (gl:delete-vertex-arrays (list pointer))))))
+
 (defun make-vao (data)
   (let ((float-size 4)
         (vao (gl:gen-vertex-array))
@@ -101,15 +106,14 @@
                    :pointer vao
                    :length (/ (length data) 4))))
 
-(defun make-vaos (&rest data)
-  (loop for dat in data
-        collecting (make-vao dat)))
+(defgeneric enable-vao (vao)
+  (:method ((vao VAO))
+    (with-slots (pointer) vao
+      (gl:bind-vertex-array pointer))))
 
-(defgeneric enable-vao (vao))
-
-(defmethod enable-vao ((vao VAO))
-  (with-slots (pointer) vao
-    (gl:bind-vertex-array pointer)))
+(defun draw-vao (vao mode first count)
+  (enable-vao vao)
+  (%gl:draw-arrays mode first count))
 
 ;;; **************************************************************************
 ;;;  Textures
@@ -172,22 +176,37 @@
                             pointer))))
       texture)))
 
+(defmethod initialize-instance :after ((instance Texture)
+                                       &key target mipmap-level border? image
+                                       &allow-other-keys)
+  (with-slots (pointer vao width height) instance
+    (unless (and (slot-boundp instance 'width) (slot-boundp instance 'height))
+      (setf width (slot-value image 'width)
+            height (slot-value image 'height)))
+    (setf pointer (make-gl-texture target mipmap-level image :border? border?)
+          vao (make-vao (vector 0.0 0.0                      0.0 0.0
+                                (float width) 0.0            1.0 0.0
+                                (float width) (float height) 1.0 1.0
+                                0.0 (float height)           0.0 1.0))))
+  (let ((pointer (slot-value instance 'pointer)))
+    (sb-ext:finalize instance #'(lambda () (gl:delete-textures (list pointer))))))
+
 (defun make-texture (target mipmap-level image &key border?)
-  (with-slots (width height) image
-    (make-instance 'Texture
-                   :pointer (make-gl-texture target mipmap-level image :border? border?)
-                   :vao (make-vao (vector 0.0 0.0                      0.0 0.0
-                                          (float width) 0.0            1.0 0.0
-                                          (float width) (float height) 1.0 1.0
-                                          0.0 (float height)           0.0 1.0))
-                   :width width
-                   :height height)))
+  (make-instance 'Texture
+                 :target target
+                 :mipmap-level mipmap-level
+                 :border? border?
+                 :image image))
 
-(defgeneric enable-texture (target texture))
+(defgeneric enable-texture (target texture)
+  (:method (target (texture Texture))
+    (with-slots (pointer) texture
+      (gl:bind-texture target pointer))))
 
-(defmethod enable-texture (target (texture Texture))
-  (with-slots (pointer) texture
-    (gl:bind-texture target pointer)))
+(defgeneric draw (object)
+  (:method ((texture Texture))
+    (with-slots (vao) texture
+      (draw-vao vao :quads 0 (slot-value vao 'length)))))
 
 ;;; **************************************************************************
 ;;;  Texture atlases
@@ -200,56 +219,63 @@
    (current-frame-x :initarg :current-frame-x)
    (current-frame-y :initarg :current-frame-y)
    (frame-size-x)
-   (frame-size-y)
-   (all-vaos)))
+   (frame-size-y)))
 
-(defun calculate-atlas-rects (atlas)
+(defun make-atlas-vao (atlas)
   (with-slots (frame-size-x frame-size-y n-frames-x n-frames-y width height) atlas
-    (loop
-      for i below n-frames-x
-      appending
-      (loop
-        for j below n-frames-y
-        collecting (vector 0.0 0.0      (* frame-size-x i) (* frame-size-y j)
-                           width 0.0    (* frame-size-x (1+ i)) (* frame-size-y j)
-                           width height (* frame-size-x (1+ i)) (* frame-size-y (1+ j))
-                           0.0 height   (* frame-size-x i) (* frame-size-y (1+ j)))))))
+    (let ((result (make-array (* 4 4 (* n-frames-x n-frames-y))
+                              :element-type 'float
+                              :fill-pointer 0)))
+      (dotimes (j n-frames-y (make-vao result))
+        (dotimes (i n-frames-x)
+          (let ((x-coord (* frame-size-x i))
+                (y-coord (* frame-size-y j))
+                (1+x-coord (* frame-size-x (1+ i)))
+                (1+y-coord (* frame-size-y (1+ j))))
+            (vector-push* result
+                          0.0 0.0                       x-coord y-coord
+                          (float width) 0.0             1+x-coord y-coord
+                          (float width) (float height)  1+x-coord 1+y-coord
+                          0.0 (float height)            x-coord 1+y-coord)))))))
 
-(defun get-atlas-current-rect (atlas)
-  (with-slots (n-frames-y current-frame-x current-frame-y all-vaos) atlas
-    (nth (+ (* current-frame-y n-frames-y) current-frame-x) all-vaos)))
-
-(defmethod initialize-instance :after ((instance Texture-atlas) &key &allow-other-keys)
+(defmethod initialize-instance :after ((instance Texture-atlas) &key image &allow-other-keys)
   (with-slots (n-frames-x n-frames-y
-               width height
                current-frame-x current-frame-y
                frame-size-x frame-size-y
-               vao all-vaos
-               sequence)
+               width height
+               vao sequence)
       instance
-    (setf frame-size-x (/ 1.0 n-frames-x)
-          frame-size-y (/ 1.0 n-frames-y)
+    (setf frame-size-x    (/ 1.0 n-frames-x)
+          frame-size-y    (/ 1.0 n-frames-y)
           current-frame-x (first (first sequence))
           current-frame-y (second (first sequence))
-          all-vaos     (apply #'make-vaos (calculate-atlas-rects instance))
-          vao          (get-atlas-current-rect instance))))
+          width           (/ (slot-value image 'width) n-frames-x)
+          height          (/ (slot-value image 'height) n-frames-y)
+          vao             (make-atlas-vao instance))))
 
-(defgeneric switch-texture-frame (texture new-frame-x new-frame-y))
+(defun get-vao-start (atlas)
+  (with-slots (n-frames-x current-frame-x current-frame-y) atlas
+    (* 4 (+ (* current-frame-y n-frames-x) current-frame-x))))
 
-(defmethod switch-texture-frame ((texture Texture-atlas) new-frame-x new-frame-y)
+(defun switch-atlas-frame (texture new-frame-x new-frame-y)
   (with-slots (current-frame-x current-frame-y vao) texture
     (setf current-frame-x new-frame-x
-          current-frame-y new-frame-y
-          vao (get-atlas-current-rect texture))))
+          current-frame-y new-frame-y)))
 
 (defun make-texture-atlas (size-x size-y target mipmap-level image &key border?)
   (with-slots (width height) image
     (make-instance 'Texture-atlas
-                   :pointer (make-gl-texture target mipmap-level image :border? border?)
                    :n-frames-x size-x
                    :n-frames-y size-y
-                   :width width
-                   :height height)))
+                   :image height
+                   :target target
+                   :mipmap-level mipmap-level
+                   :border? border?)))
+
+(defmethod draw ((atlas Texture-atlas))
+  (let ((start (get-vao-start atlas)))
+    (with-slots (vao) atlas
+      (draw-vao vao :quads start 4))))
 
 ;;; **************************************************************************
 ;;;  Animations
@@ -261,34 +287,35 @@
    (sequence :initarg :sequence)
    (current-frame :initform 0)))
 
-(defgeneric next-frame (textute))
-(defgeneric animation-tick (texture))
-
-(defmethod next-frame ((texture Animated-texture))
-   (with-slots (sequence current-frame current-frame-x current-frame-y) texture
-     (mod-incf current-frame (length sequence))
-     (destructuring-bind (x y) (elt sequence current-frame)
-       (setf current-frame-x x
-             current-frame-y y))
-     (switch-texture-frame texture current-frame-x current-frame-y)))
-
-(defmethod animation-tick ((texture Animated-texture))
-  (with-slots (frame-rate counter) texture
-    (incf counter)
-    (when (>= counter frame-rate)
-      (setf counter 0)
-      (next-frame texture))))
-
-(defun make-animated-texture (size-x size-y sequence frame-rate target mipmap-level image &key border?)
+(defun make-animated-texture (size-x size-y sequence frame-rate target mipmap-level image
+                              &key border?)
   (with-slots (width height) image
     (make-instance 'Animated-texture
-                   :pointer (make-gl-texture target mipmap-level image :border? border?)
                    :n-frames-x size-x
                    :n-frames-y size-y
                    :sequence sequence
                    :frame-rate frame-rate
-                   :width (float (/ width size-x))
-                   :height (float (/ height size-y)))))
+                   :image image
+                   :target target
+                   :mipmap-level mipmap-level
+                   :border? border?)))
+
+(defgeneric next-frame (textute)
+  (:method ((texture Animated-texture))
+    (with-slots (sequence current-frame current-frame-x current-frame-y) texture
+      (mod-incf current-frame (length sequence))
+      (destructuring-bind (x y) (elt sequence current-frame)
+        (setf current-frame-x x
+              current-frame-y y))
+      (switch-atlas-frame texture current-frame-x current-frame-y))))
+
+(defgeneric animation-tick (texture)
+  (:method ((texture Animated-texture))
+    (with-slots (frame-rate counter) texture
+      (incf counter)
+      (when (>= counter frame-rate)
+        (setf counter 0)
+        (next-frame texture)))))
 
 ;;; **************************************************************************
 ;;;  Sprites
@@ -306,8 +333,6 @@
    (texture :initarg :texture
             :accessor sprite-texture)))
 
-(defgeneric draw (object))
-
 (defmethod draw ((sprite Sprite))
   ;; Sprites are mostly rectangles. At least rectangles are easier to work with.
   (with-slots (position-x position-y scale rotation texture) sprite
@@ -321,9 +346,7 @@
       (gl:rotate y 0.0 1.0 0.0)
       (gl:rotate z 0.0 0.0 1.0))
     (enable-texture :texture-2d texture)
-    (with-slots (vao) texture
-      (enable-vao vao)
-      (%gl:draw-arrays :quads 0 (slot-value vao 'length)))
+    (draw texture)
     (gl:pop-matrix)))
 
 (defun make-sprite (texture x y &key (scale (list 1.0 1.0)) (rotation (list 0.0 0.0 0.0)))
