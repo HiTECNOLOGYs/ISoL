@@ -263,14 +263,13 @@
           current-frame-y new-frame-y)))
 
 (defun make-texture-atlas (size-x size-y target mipmap-level image &key border?)
-  (with-slots (width height) image
-    (make-instance 'Texture-atlas
-                   :n-frames-x size-x
-                   :n-frames-y size-y
-                   :image height
-                   :target target
-                   :mipmap-level mipmap-level
-                   :border? border?)))
+  (make-instance 'Texture-atlas
+                 :n-frames-x size-x
+                 :n-frames-y size-y
+                 :image image
+                 :target target
+                 :mipmap-level mipmap-level
+                 :border? border?))
 
 (defmethod draw ((atlas Texture-atlas))
   (let ((start (get-vao-start atlas)))
@@ -289,16 +288,15 @@
 
 (defun make-animated-texture (size-x size-y sequence frame-rate target mipmap-level image
                               &key border?)
-  (with-slots (width height) image
-    (make-instance 'Animated-texture
-                   :n-frames-x size-x
-                   :n-frames-y size-y
-                   :sequence sequence
-                   :frame-rate frame-rate
-                   :image image
-                   :target target
-                   :mipmap-level mipmap-level
-                   :border? border?)))
+  (make-instance 'Animated-texture
+                 :n-frames-x size-x
+                 :n-frames-y size-y
+                 :sequence sequence
+                 :frame-rate frame-rate
+                 :image image
+                 :target target
+                 :mipmap-level mipmap-level
+                 :border? border?))
 
 (defgeneric next-frame (textute)
   (:method ((texture Animated-texture))
