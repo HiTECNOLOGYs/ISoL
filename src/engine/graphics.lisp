@@ -142,16 +142,16 @@
 (defun copy-cairo-image-to-foreign-memory (pointer data w h)
   (dotimes (i h)
     (dotimes (j w)
-      (let* ((pixel-start-index (* 4 (+ (* (- h i 1) w) j)))
-             (pixel-start-index-transpose (* 4 (+ (* (- w j 1) h) i)))
+      (let* ((pixel-start-index (* 4 (+ (* i w) j)))
+             (pixel-start-index-new (* 4 (+ (* (- h i 1) w) j)))
              (r (cffi:mem-aref data :unsigned-char pixel-start-index))
              (g (cffi:mem-aref data :unsigned-char (+ 1 pixel-start-index)))
              (b (cffi:mem-aref data :unsigned-char (+ 2 pixel-start-index)))
              (a (cffi:mem-aref data :unsigned-char (+ 3 pixel-start-index))))
-        (setf (cffi:mem-aref pointer :unsigned-char pixel-start-index-transpose) r
-              (cffi:mem-aref pointer :unsigned-char (+ 1 pixel-start-index-transpose)) g
-              (cffi:mem-aref pointer :unsigned-char (+ 2 pixel-start-index-transpose)) b
-              (cffi:mem-aref pointer :unsigned-char (+ 3 pixel-start-index-transpose)) a)))))
+        (setf (cffi:mem-aref pointer :unsigned-char pixel-start-index-new) r
+              (cffi:mem-aref pointer :unsigned-char (+ 1 pixel-start-index-new)) g
+              (cffi:mem-aref pointer :unsigned-char (+ 2 pixel-start-index-new)) b
+              (cffi:mem-aref pointer :unsigned-char (+ 3 pixel-start-index-new)) a)))))
 
 (defun make-gl-texture (target mipmap-level image &key border?)
   (with-slots (width height channels format data) image
@@ -165,7 +165,7 @@
           ((cffi:pointerp data)
            (copy-cairo-image-to-foreign-memory pointer data width height)
            (gl:tex-image-2d target mipmap-level
-                            format height width (if border? 1 0)
+                            format width height (if border? 1 0)
                             format :unsigned-byte
                             pointer))
           (t
@@ -183,11 +183,13 @@
     (unless (and (slot-boundp instance 'width) (slot-boundp instance 'height))
       (setf width (slot-value image 'width)
             height (slot-value image 'height)))
-    (setf pointer (make-gl-texture target mipmap-level image :border? border?)
-          vao (make-vao (vector 0.0 0.0                      0.0 0.0
-                                (float width) 0.0            1.0 0.0
-                                (float width) (float height) 1.0 1.0
-                                0.0 (float height)           0.0 1.0))))
+    (unless (slot-boundp instance 'vao)
+      (setf vao (make-vao (vector 0.0 0.0                      0.0 0.0
+                                  (float width) 0.0            1.0 0.0
+                                  (float width) (float height) 1.0 1.0
+                                  0.0 (float height)           0.0 1.0))))
+    (unless (slot-boundp instance 'pointer)
+      (setf pointer (make-gl-texture target mipmap-level image :border? border?))))
   (let ((pointer (slot-value instance 'pointer)))
     (sb-ext:finalize instance #'(lambda () (gl:delete-textures (list pointer))))))
 
@@ -206,6 +208,7 @@
 (defgeneric draw (object)
   (:method ((texture Texture))
     (with-slots (vao) texture
+      (enable-texture :texture-2d texture)
       (draw-vao vao :quads 0 (slot-value vao 'length)))))
 
 ;;; **************************************************************************
@@ -216,8 +219,10 @@
 (defclass Texture-atlas (Texture)
   ((n-frames-x :initarg :n-frames-x)
    (n-frames-y :initarg :n-frames-y)
-   (current-frame-x :initarg :current-frame-x)
-   (current-frame-y :initarg :current-frame-y)
+   (current-frame-x :initarg :current-frame-x
+                    :initform 0)
+   (current-frame-y :initarg :current-frame-y
+                    :initform 0)
    (frame-size-x)
    (frame-size-y)))
 
@@ -239,19 +244,12 @@
                           0.0 (float height)            x-coord 1+y-coord)))))))
 
 (defmethod initialize-instance :after ((instance Texture-atlas) &key image &allow-other-keys)
-  (with-slots (n-frames-x n-frames-y
-               current-frame-x current-frame-y
-               frame-size-x frame-size-y
-               width height
-               vao sequence)
-      instance
+  (with-slots (n-frames-x n-frames-y frame-size-x frame-size-y width height vao) instance
     (setf frame-size-x    (/ 1.0 n-frames-x)
           frame-size-y    (/ 1.0 n-frames-y)
-          current-frame-x (first (first sequence))
-          current-frame-y (second (first sequence))
           width           (/ (slot-value image 'width) n-frames-x)
-          height          (/ (slot-value image 'height) n-frames-y)
-          vao             (make-atlas-vao instance))))
+          height          (/ (slot-value image 'height) n-frames-y))
+    (setf vao (make-atlas-vao instance))))
 
 (defun get-vao-start (atlas)
   (with-slots (n-frames-x current-frame-x current-frame-y) atlas
@@ -331,21 +329,22 @@
    (texture :initarg :texture
             :accessor sprite-texture)))
 
+(defun apply-transformations (sprite)
+  (with-slots (position-x position-y scale rotation texture) sprite
+    (gl:with-pushed-matrix
+      (gl:load-identity)
+      (gl:translate position-x position-y 0.0)
+      (destructuring-bind (x y) scale
+        (gl:scale x y 1.0))
+      (destructuring-bind (x y z) rotation
+        (gl:rotate x 1.0 0.0 0.0)
+        (gl:rotate y 0.0 1.0 0.0)
+        (gl:rotate z 0.0 0.0 1.0)))))
+
 (defmethod draw ((sprite Sprite))
   ;; Sprites are mostly rectangles. At least rectangles are easier to work with.
-  (with-slots (position-x position-y scale rotation texture) sprite
-    (gl:push-matrix)
-    (gl:load-identity)
-    (gl:translate position-x position-y 0.0)
-    (destructuring-bind (x y) scale
-      (gl:scale x y 1.0))
-    (destructuring-bind (x y z) rotation
-      (gl:rotate x 1.0 0.0 0.0)
-      (gl:rotate y 0.0 1.0 0.0)
-      (gl:rotate z 0.0 0.0 1.0))
-    (enable-texture :texture-2d texture)
-    (draw texture)
-    (gl:pop-matrix)))
+  (apply-transformations sprite)
+  (draw (sprite-texture sprite)))
 
 (defun make-sprite (texture x y &key (scale (list 1.0 1.0)) (rotation (list 0.0 0.0 0.0)))
   (make-instance 'Sprite
@@ -359,73 +358,115 @@
 ;;;  Text
 ;;; **************************************************************************
 
-(defclass Text (Sprite)
+(defclass Text-atlas (Texture)
   ((font :initarg :font
-         :initform "Times"
-         :accessor text-font)
-   (width :initarg :width
-          :accessor text-width)
-   (height :initarg :height
-           :accessor text-height)
-   (content :initarg :content
-            :accessor text-content)
+         :initform "Times")
    (size :initarg :size
-         :initform nil
-         :accessor text-size)
+         :initform nil)
    (color :initarg :color
-          :initform (list 0 0 0 255)
-          :accessor text-color)))
+          :initform (list 0 0 0 255))
+   (char-width :initarg :char-width)
+   (char-uv-width :initarg :char-uv-width)))
 
-(defun draw-text (text)
-  (with-slots (font color size width height content) text
-    (let* ((surface (cairo:create-image-surface :argb32 width height))
-           (context (cairo:create-context surface)))
-      (cairo:with-context (context)
-        (destructuring-bind (r g b a) color
-          (cairo:set-source-rgba r g b a))
-        (cairo:select-font-face font :normal :normal)
-        (cairo:set-font-size (or size (* 0.7 height)))
-        (cairo:move-to (* width 0.01) (* height 0.7))
-        (cairo:show-text content))
-      (cairo:destroy context)
-      surface)))
+(defclass Text (Sprite)
+  ((content :initarg :content
+            :accessor text-content)
+   (atlas :initarg :atlas
+          :initform *text-atlas*)
+   (vao :initarg :vao)))
 
-(defun render-text-texture (text)
-  (with-slots (width height texture) text
-    (let* ((surface (draw-text text))
-           (data (cairo:image-surface-get-data surface :pointer-only t))
-           (image (make-instance 'Image
-                                 :format :rgba
-                                 :channels 4
-                                 :width width
-                                 :height height
-                                 :data data)))
-      (setf texture (make-texture :texture-2d 0 image))
+(defun draw-atlas (surface color font size height)
+  (let ((context (cairo:create-context surface)))
+    (unwind-protect
+         (cairo:with-context (context)
+           (destructuring-bind (r g b a) color
+             (cairo:set-source-rgba r g b a))
+           (cairo:select-font-face font :normal :normal)
+           (cairo:set-font-size size)
+           (cairo:move-to 1 (* 0.75 height)) ; This works on pure magic
+           (cairo:show-text (with-output-to-string (stream)
+                              (loop for char-code from 32 to 126 doing
+                                (format stream "~A" (code-char char-code))))))
+      (cairo:destroy context))))
+
+(defun make-text-atlas (&optional (size 12))
+  (let* ((color (list 0 0 0 255))
+         (font "Anonymous Pro")
+         (height (1+ size))
+         (n-chars (1+ (- 126 32)))
+         (width (* n-chars (1+ (ceiling size 2)))) ; As well as this.
+         (surface (cairo:create-image-surface :argb32 width height)))
+    (draw-atlas surface color font size height)
+    (prog1
+        (let* ((data (cairo:image-surface-get-data surface :pointer-only t))
+               (image (make-instance 'Image
+                                     :format :rgba
+                                     :channels 4
+                                     :width width
+                                     :height height
+                                     :data data)))
+          (make-instance 'Text-atlas
+                         :font font
+                         :color color
+                         :size size
+                         :char-uv-width (/ 1.0 n-chars)
+                         :char-width (/ width n-chars)
+                         :target :texture-2d
+                         :mipmap-level 0
+                         :image image))
       (cairo:destroy surface))))
+
+;; TODO Merge this code with MAKE-ATLAS-VAO as they're very similar.
+(defun make-text-vao (text atlas)
+  (with-slots (char-width char-uv-width height) atlas
+    (loop
+      with result = (make-array (* 4 4 (length text))
+                                :element-type 'float
+                                :fill-pointer 0)
+      for char across text
+      for char-position = (- (char-code char) 32)
+      for i from 0
+      finally (return (make-vao result))
+      when (<= 0 char-position 94)
+        doing
+           (let ((x-coord (float (* char-position char-uv-width)))
+                 (y-coord 0.0)
+                 (1+x-coord (float (* char-uv-width (1+ char-position))))
+                 (1+y-coord 1.0)
+                 (x-vert (float (* i char-width)))
+                 (1+x-vert (float (* (1+ i) char-width))))
+             (vector-push* result
+                           x-vert 0.0              x-coord y-coord
+                           1+x-vert 0.0            1+x-coord y-coord
+                           1+x-vert (float height) 1+x-coord 1+y-coord
+                           x-vert (float height)   x-coord 1+y-coord)))))
+
+(defun update-text-vao (text)
+  (with-slots (vao atlas content) text
+    (setf vao (make-text-vao content atlas))))
 
 (defmethod initialize-instance :after ((instance Text) &rest initargs)
   (declare (ignore initargs))
-  (with-slots (width height surface context texture) instance
-    (render-text-texture instance)))
+  (update-text-vao instance))
 
-(defgeneric update-content (new-content instance))
+(defmethod (setf text-content) (new-value (instance Text))
+  (setf (text-content instance) new-value)
+  (update-text-vao instance)
+  new-value)
 
-(defmethod update-content (new-content (instance Text))
-  (with-slots (content) instance
-    (setf content new-content)
-    (draw-text instance)
-    (render-text-texture instance)))
+(defmethod draw ((text Text))
+  (apply-transformations text)
+  (with-slots (atlas vao) text
+    (enable-texture :texture-2d atlas)
+    (draw-vao vao :quads 0 (slot-value vao 'length))))
 
-(defun make-text (content x y w h
-                  &key (font "Times") size
-                  (scale (list 1.0 1.0)) (rotation (list 0.0 0.0 0.0)))
+(defun make-text (content x y
+                  &key (scale (list 1.0 1.0)) (rotation (list 0.0 0.0 0.0))
+                  (atlas (make-text-atlas)))
   (make-instance 'Text
                  :content content
                  :position-x x
                  :position-y y
                  :scale scale
                  :rotation rotation
-                 :width w
-                 :height h
-                 :font font
-                 :size size))
+                 :atlas atlas))
