@@ -331,20 +331,20 @@
 
 (defun apply-transformations (sprite)
   (with-slots (position-x position-y scale rotation texture) sprite
-    (gl:with-pushed-matrix
-      (gl:load-identity)
-      (gl:translate position-x position-y 0.0)
-      (destructuring-bind (x y) scale
-        (gl:scale x y 1.0))
-      (destructuring-bind (x y z) rotation
-        (gl:rotate x 1.0 0.0 0.0)
-        (gl:rotate y 0.0 1.0 0.0)
-        (gl:rotate z 0.0 0.0 1.0)))))
+    (gl:load-identity)
+    (gl:translate position-x position-y 0.0)
+    (destructuring-bind (x y) scale
+      (gl:scale x y 1.0))
+    (destructuring-bind (x y z) rotation
+      (gl:rotate x 1.0 0.0 0.0)
+      (gl:rotate y 0.0 1.0 0.0)
+      (gl:rotate z 0.0 0.0 1.0))))
 
 (defmethod draw ((sprite Sprite))
   ;; Sprites are mostly rectangles. At least rectangles are easier to work with.
-  (apply-transformations sprite)
-  (draw (sprite-texture sprite)))
+  (gl:with-pushed-matrix
+    (apply-transformations sprite)
+    (draw (sprite-texture sprite))))
 
 (defun make-sprite (texture x y &key (scale (list 1.0 1.0)) (rotation (list 0.0 0.0 0.0)))
   (make-instance 'Sprite
@@ -455,10 +455,11 @@
   new-value)
 
 (defmethod draw ((text Text))
-  (apply-transformations text)
-  (with-slots (atlas vao) text
-    (enable-texture :texture-2d atlas)
-    (draw-vao vao :quads 0 (slot-value vao 'length))))
+  (gl:with-pushed-matrix
+    (apply-transformations text)
+    (with-slots (atlas vao) text
+      (enable-texture :texture-2d atlas)
+      (draw-vao vao :quads 0 (slot-value vao 'length)))))
 
 (defun make-text (content x y
                   &key (scale (list 1.0 1.0)) (rotation (list 0.0 0.0 0.0))
