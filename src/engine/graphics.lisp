@@ -22,16 +22,16 @@
 ;;; **************************************************************************
 
 (defun init-graphics ()
-  (sdl2.kit:start))
+  (kit.sdl2:start))
 
 (defun deinit-graphics ()
-  (sdl2.kit:quit))
+  (kit.sdl2:quit))
 
 ;;; **************************************************************************
 ;;;  Windows
 ;;; **************************************************************************
 
-(defclass Window (sdl2.kit:gl-window) ())
+(defclass Window (kit.sdl2:gl-window) ())
 
 (defun make-window (class &rest arguments)
   (apply #'make-instance class arguments))
@@ -45,21 +45,21 @@
      ,@body))
 
 (defmacro define-window-render (name &body body)
-  `(defmethod sdl2.kit:render ((window ,name))
+  `(defmethod kit.sdl2:render ((window ,name))
      ,@body))
 
 (defmacro define-window-close (name &body body)
-  `(defmethod sdl2.kit:close-window ((window ,name))
+  `(defmethod kit.sdl2:close-window ((window ,name))
      ,@body))
 
 (defmacro define-window-event-handler (name &body body)
-  `(defmethod sdl2.kit:window-event ((window ,name) type timestamp data1 data2)
+  `(defmethod kit.sdl2:window-event ((window ,name) type timestamp data1 data2)
      ,@body))
 
 ;;; TODO Move FPS somewhere where I can tweak it easily.
 (defmethod initialize-instance :after ((window Window)
                                        &key (w 800) (h 600) &allow-other-keys)
-  (setf (sdl2.kit:idle-render window) t)
+  (setf (kit.sdl2:idle-render window) t)
   ;; OpenGL
   (gl:viewport 0 0 w h)
   (gl:matrix-mode :projection)
@@ -72,7 +72,7 @@
   (gl:blend-func :src-alpha :one-minus-src-alpha)
   (gl:load-identity))
 
-(defmethod sdl2.kit:close-window ((window Window))
+(defmethod kit.sdl2:close-window ((window Window))
   (call-next-method))
 
 ;;; **************************************************************************

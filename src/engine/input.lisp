@@ -93,7 +93,7 @@
 ;; SDL macros
 
 (defmacro define-window-keyboard-handler (name &body body)
-  `(defmethod sdl2.kit:keyboard-event ((window ,name) state timestamp repeat-p keysym)
+  `(defmethod kit.sdl2:keyboard-event ((window ,name) state timestamp repeat-p keysym)
      ,@body))
 
 ;;; **************************************************************************
@@ -124,9 +124,9 @@
 ;; SDL macros
 
 (defmacro define-window-mouse-button-handler (name &body body)
-  `(defmethod sdl2.kit:mousebutton-event ((window ,name) state timestamp button x y)
+  `(defmethod kit.sdl2:mousebutton-event ((window ,name) state timestamp button x y)
      ,@body))
 
 (defmacro define-window-mouse-motion-handler (name &body body)
-  `(defmethod sdl2.kit:mousemotion-event ((window ,name) timestamp x y)
+  `(defmethod kit.sdl2:mousemotion-event ((window ,name) timestamp x y)
      ,@body))
