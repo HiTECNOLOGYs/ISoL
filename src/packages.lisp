@@ -20,5 +20,5 @@
         :alexandria
         :iterate
         :anaphora
-        :let+)
+        :let-plus)
   (:export :main))
