@@ -69,6 +69,7 @@
                               :depends-on ("scenes"
                                            "world"))))
                ;; ----------------
+               #+nil
                (:module "game"
                 :serial t
                 :components ((:file "world")
@@ -76,6 +77,7 @@
                              (:file "scenes")
                              (:file "controls")))
                ;; ----------------
+               #+nil
                (:file "isol")))
 
 (defsystem :isol/tests
