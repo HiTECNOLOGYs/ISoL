@@ -79,41 +79,33 @@
 ;;;  VAOs
 ;;; **************************************************************************
 
-(defclass VAO ()
-  ((pointer :initarg :pointer)
-   (length :initarg :length)))
+(kit.gl.vao:defvao 2d-texture ()
+  (:separate ()
+   (vertex :float 2)
+   (uv :float 2)))
 
-(defmethod initialize-instance :after ((instance VAO) &rest initargs)
-  (declare (ignore initargs))
-  (let ((pointer (slot-value instance 'pointer)))
-    (sb-ext:finalize instance #'(lambda () (gl:delete-vertex-arrays (list pointer))))))
-
-(defun make-vao (data)
-  (let ((float-size 4)
-        (vao (gl:gen-vertex-array))
-        (vbo (first (gl:gen-buffers 1))))
-    (gl:bind-vertex-array vao)
-    (gl:bind-buffer :array-buffer vbo)
-    (with-foreign-vector (data-ptr :float data)
-      (%gl:buffer-data :array-buffer (* float-size (length data)) data-ptr :static-draw))
+(defun make-vao (type vertex-data uv-data)
+  (let* ((float-size 4)
+         (vertex-length (length vertex-data))
+         (uv-length (length uv-data))
+         (vao (make-instance 'kit.gl.vao:vao
+                             :type type
+                             :primitive :quads
+                             :vertex-count (/ vertex-length 2))))
+    (kit.gl.vao:vao-bind vao)
+    (kit.gl.vao:vao-buffer-vector vao 0 (* float-size vertex-length) vertex-data :static-draw)
     (gl:enable-client-state :vertex-array)
-    (%gl:vertex-pointer 2 :float (* 4 float-size) (cffi:make-pointer 0))
+    (%gl:vertex-pointer 2 :float (* 2 float-size) (cffi:make-pointer 0))
+    (kit.gl.vao:vao-buffer-vector vao 1 (* float-size uv-length) uv-data :static-draw)
     (gl:enable-client-state :texture-coord-array)
-    (%gl:tex-coord-pointer 2 :float (* 4 float-size) (cffi:make-pointer (* float-size 2)))
-    (gl:bind-vertex-array 0)
-    (gl:delete-buffers (list vbo))
-    (make-instance 'VAO
-                   :pointer vao
-                   :length (/ (length data) 4))))
+    (%gl:tex-coord-pointer 2 :float (* 2 float-size) (cffi:make-pointer 0))
+    (kit.gl.vao:vao-unbind)
+    vao))
 
-(defgeneric enable-vao (vao)
-  (:method ((vao VAO))
-    (with-slots (pointer) vao
-      (gl:bind-vertex-array pointer))))
-
-(defun draw-vao (vao mode first count)
-  (enable-vao vao)
-  (%gl:draw-arrays mode first count))
+(defun float-vector (&rest args)
+  (make-array (length args)
+              :element-type 'single-float
+              :initial-contents args))
 
 ;;; **************************************************************************
 ;;;  Textures
@@ -184,10 +176,15 @@
       (setf width (slot-value image 'width)
             height (slot-value image 'height)))
     (unless (slot-boundp instance 'vao)
-      (setf vao (make-vao (vector 0.0 0.0                      0.0 0.0
-                                  (float width) 0.0            1.0 0.0
-                                  (float width) (float height) 1.0 1.0
-                                  0.0 (float height)           0.0 1.0))))
+      (setf vao (make-vao '2d-texture
+                          (float-vector 0.0           0.0
+                                        (+ (float width)) 0.0
+                                        (float width) (float height)
+                                        0.0           (float height))
+                          (float-vector 0.0 0.0
+                                        1.0 0.0
+                                        1.0 1.0
+                                        0.0 1.0))))
     (unless (slot-boundp instance 'pointer)
       (setf pointer (make-gl-texture target mipmap-level image :border? border?))))
   (let ((pointer (slot-value instance 'pointer)))
@@ -209,7 +206,8 @@
   (:method ((texture Texture))
     (with-slots (vao) texture
       (enable-texture :texture-2d texture)
-      (draw-vao vao :quads 0 (slot-value vao 'length)))))
+      (kit.gl.vao:vao-draw vao)
+      (kit.gl.vao:vao-unbind))))
 
 ;;; **************************************************************************
 ;;;  Texture atlases
