@@ -37,6 +37,8 @@
   :serial t
   :components ((:file "packages")
                (:file "utilities")
+               (:module "shaders"
+                :components ((:file "shaders")))
                (:module "engine"
                 :components ((:file "contexts")
                              (:file "resources")

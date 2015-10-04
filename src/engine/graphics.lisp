@@ -31,7 +31,9 @@
 ;;;  Windows
 ;;; **************************************************************************
 
-(defclass Window (kit.sdl2:gl-window) ())
+(defclass Window (kit.sdl2:gl-window)
+  ((view-matrix)
+   (shaders)))
 
 (defun make-window (class &rest arguments)
   (apply #'make-instance class arguments))
@@ -64,6 +66,7 @@
   (gl:viewport 0 0 w h)
   (gl:matrix-mode :projection)
   (gl:ortho 0 w 0 h -1 1)
+  (setf (slot-value window 'view-matrix) (kit.glm:ortho-matrix 0 w 0 h -1 1))
   (gl:matrix-mode :modelview)
   (gl:enable :texture-2d
              :blend)
@@ -92,14 +95,8 @@
                              :type type
                              :primitive :quads
                              :vertex-count (/ vertex-length 2))))
-    (kit.gl.vao:vao-bind vao)
     (kit.gl.vao:vao-buffer-vector vao 0 (* float-size vertex-length) vertex-data :static-draw)
-    (gl:enable-client-state :vertex-array)
-    (%gl:vertex-pointer 2 :float (* 2 float-size) (cffi:make-pointer 0))
     (kit.gl.vao:vao-buffer-vector vao 1 (* float-size uv-length) uv-data :static-draw)
-    (gl:enable-client-state :texture-coord-array)
-    (%gl:tex-coord-pointer 2 :float (* 2 float-size) (cffi:make-pointer 0))
-    (kit.gl.vao:vao-unbind)
     vao))
 
 (defun float-vector (&rest args)
