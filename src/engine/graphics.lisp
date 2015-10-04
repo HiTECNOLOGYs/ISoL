@@ -104,6 +104,10 @@
               :element-type 'single-float
               :initial-contents args))
 
+(defun draw-vao (vao)
+  (kit.gl.vao:vao-draw vao)
+  (kit.gl.vao:vao-unbind))
+
 ;;; **************************************************************************
 ;;;  Textures
 ;;; **************************************************************************
@@ -200,51 +204,69 @@
       (gl:bind-texture target pointer))))
 
 (defgeneric draw (object)
-  (:method ((texture Texture))
+  (:method ((texture Texture) )
     (with-slots (vao) texture
       (enable-texture :texture-2d texture)
-      (kit.gl.vao:vao-draw vao)
-      (kit.gl.vao:vao-unbind))))
+      (draw-vao vao))))
 
 ;;; **************************************************************************
 ;;;  Texture atlases
 ;;; **************************************************************************
 
 ;;; TODO Make atlases support textures with unequal frames
-(defclass Texture-atlas (Texture)
-  ((n-frames-x :initarg :n-frames-x)
+(defclass Texture-atlas ()
+  ((textures)
+   (n-frames-x :initarg :n-frames-x)
    (n-frames-y :initarg :n-frames-y)
    (current-frame-x :initarg :current-frame-x
                     :initform 0)
    (current-frame-y :initarg :current-frame-y
                     :initform 0)
+   (frame-width)
+   (frame-height)
    (frame-size-x)
    (frame-size-y)))
 
-(defun make-atlas-vao (atlas)
-  (with-slots (frame-size-x frame-size-y n-frames-x n-frames-y width height) atlas
-    (let ((result (make-array (* 4 4 (* n-frames-x n-frames-y))
-                              :element-type 'float
+(defun make-atlas-vaos (atlas)
+  (with-slots (frame-size-x frame-size-y n-frames-x n-frames-y frame-width frame-height) atlas
+    (let ((result (make-array (* n-frames-x n-frames-y)
                               :fill-pointer 0)))
-      (dotimes (j n-frames-y (make-vao result))
+      (dotimes (j n-frames-y)
         (dotimes (i n-frames-x)
-          (let ((x-coord (* frame-size-x i))
+          (let ((width frame-width)
+                (height frame-height)
+                (x-coord (* frame-size-x i))
                 (y-coord (* frame-size-y j))
                 (1+x-coord (* frame-size-x (1+ i)))
                 (1+y-coord (* frame-size-y (1+ j))))
-            (vector-push* result
-                          0.0 0.0                       x-coord y-coord
-                          (float width) 0.0             1+x-coord y-coord
-                          (float width) (float height)  1+x-coord 1+y-coord
-                          0.0 (float height)            x-coord 1+y-coord)))))))
+            (vector-push (list (float-vector 0.0           0.0
+                                             (float width) 0.0
+                                             (float width) (float height)
+                                             0.0           (float height))
+                               (float-vector x-coord   y-coord
+                                             1+x-coord y-coord
+                                             1+x-coord 1+y-coord
+                                             x-coord   1+y-coord))
+                         result))))
+      (loop for (vertices uvs) across result
+            collecting (make-vao '2d-texture vertices uvs)))))
 
 (defmethod initialize-instance :after ((instance Texture-atlas) &key image &allow-other-keys)
-  (with-slots (n-frames-x n-frames-y frame-size-x frame-size-y width height vao) instance
+  (with-slots (n-frames-x n-frames-y frame-size-x frame-size-y textures frame-width frame-height) instance
     (setf frame-size-x    (/ 1.0 n-frames-x)
           frame-size-y    (/ 1.0 n-frames-y)
-          width           (/ (slot-value image 'width) n-frames-x)
-          height          (/ (slot-value image 'height) n-frames-y))
-    (setf vao (make-atlas-vao instance))))
+          frame-width     (/ (slot-value image 'width) n-frames-x)
+          frame-height    (/ (slot-value image 'height) n-frames-y))
+    (setf textures (make-array (list n-frames-x n-frames-y)))
+    (loop for i from 0
+          for vao in (make-atlas-vaos instance)
+          doing (setf (row-major-aref textures i) (make-instance 'texture
+                                                                 :mipmap-level 0
+                                                                 :target :texture-2d
+                                                                 :image image
+                                                                 :width frame-width
+                                                                 :height frame-height
+                                                                 :vao vao)))))
 
 (defun get-vao-start (atlas)
   (with-slots (n-frames-x current-frame-x current-frame-y) atlas
@@ -265,9 +287,8 @@
                  :border? border?))
 
 (defmethod draw ((atlas Texture-atlas))
-  (let ((start (get-vao-start atlas)))
-    (with-slots (vao) atlas
-      (draw-vao vao :quads start 4))))
+  (with-slots (textures current-frame-x current-frame-y) atlas
+    (draw (aref textures current-frame-x current-frame-y))))
 
 ;;; **************************************************************************
 ;;;  Animations
@@ -309,11 +330,26 @@
         (next-frame texture)))))
 
 ;;; **************************************************************************
+;;;  Transformations
+;;; **************************************************************************
+
+(defun matrix-translate (matrix &key (x 0.0) (y 0.0) (z 0.0))
+  (kit.glm:matrix* matrix (kit.glm:translate* x y z)))
+
+(defun matrix-scale (matrix &key (x 0.0) (y 0.0) (z 0.0))
+  (kit.glm:matrix* matrix (kit.glm:scale* x y z)))
+
+(defun matrix-rotate (matrix &key (x 0.0) (y 0.0) (z 0.0))
+  (kit.glm:matrix* matrix (kit.glm:rotate* x y z)))
+
+;;; **************************************************************************
 ;;;  Sprites
 ;;; **************************************************************************
 
 (defclass Sprite ()
-  ((position-x :initarg :position-x
+  ((model-matrix :initarg :model-matrix
+                 :initform (kit.glm:identity-matrix))
+   (position-x :initarg :position-x
                :accessor sprite-position-x)
    (position-y :initarg :position-y
                :accessor sprite-position-y)
@@ -324,22 +360,24 @@
    (texture :initarg :texture
             :accessor sprite-texture)))
 
-(defun apply-transformations (sprite)
-  (with-slots (position-x position-y scale rotation texture) sprite
-    (gl:load-identity)
-    (gl:translate position-x position-y 0.0)
-    (destructuring-bind (x y) scale
-      (gl:scale x y 1.0))
-    (destructuring-bind (x y z) rotation
-      (gl:rotate x 1.0 0.0 0.0)
-      (gl:rotate y 0.0 1.0 0.0)
-      (gl:rotate z 0.0 0.0 1.0))))
+(defmethod initialize-instance :after ((instance sprite) &rest initargs)
+  (declare (ignore initargs))
+  (move instance))
+
+(defgeneric move (sprite)
+  (:method ((sprite sprite))
+   (with-slots (model-matrix position-x position-y scale rotation texture) sprite
+     (let ((matrix (kit.glm:identity-matrix)))
+       (destructuring-bind (x y) scale
+         (setf matrix (matrix-scale matrix :x x :y y :z 1.0)))
+       (setf matrix (matrix-translate matrix :x position-x :y position-y :z 0.0))
+       (destructuring-bind (x y z) rotation
+         (setf matrix (matrix-rotate matrix :x x :y y :z z)))
+       (setf model-matrix matrix)))))
 
 (defmethod draw ((sprite Sprite))
   ;; Sprites are mostly rectangles. At least rectangles are easier to work with.
-  (gl:with-pushed-matrix
-    (apply-transformations sprite)
-    (draw (sprite-texture sprite))))
+  (draw (sprite-texture sprite)))
 
 (defun make-sprite (texture x y &key (scale (list 1.0 1.0)) (rotation (list 0.0 0.0 0.0)))
   (make-instance 'Sprite

@@ -12,7 +12,9 @@
   (kit.gl.shader:shader basic-vertex-vao :vertex-shader (:file "basic-vertex-vao.glsl"))
   (kit.gl.shader:shader basic-fragment-vao :fragment-shader (:file "basic-fragment-vao.glsl"))
   (kit.gl.shader:program (:sprite
-                          :uniforms ((:view-matrix "view_m"))
+                          :uniforms ((:model-matrix "model_m")
+                                     (:view-matrix "view_m")
+                                     (:projection-matrix "projection_m"))
                           :attrs ((:vertex 0)
                                   (:uv 1)))
     (:vertex-shader basic-vertex-vao)
