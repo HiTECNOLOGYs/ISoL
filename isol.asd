@@ -21,6 +21,7 @@
   :version (:read-file-form "version.lisp-expr")
   :depends-on (:sdl2
                :sdl2kit
+               :glkit
                :cl-opengl
                :opticl
                :cl-cairo2
