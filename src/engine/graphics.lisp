@@ -229,9 +229,8 @@
 
 (defun make-atlas-vaos (atlas)
   (with-slots (frame-size-x frame-size-y n-frames-x n-frames-y frame-width frame-height) atlas
-    (let ((result (make-array (* n-frames-x n-frames-y)
-                              :fill-pointer 0)))
-      (dotimes (j n-frames-y)
+    (let ((result (make-array (list n-frames-x n-frames-y))))
+      (dotimes (j n-frames-y result)
         (dotimes (i n-frames-x)
           (let ((width frame-width)
                 (height frame-height)
@@ -239,17 +238,16 @@
                 (y-coord (* frame-size-y j))
                 (1+x-coord (* frame-size-x (1+ i)))
                 (1+y-coord (* frame-size-y (1+ j))))
-            (vector-push (list (float-vector 0.0           0.0
-                                             (float width) 0.0
-                                             (float width) (float height)
-                                             0.0           (float height))
-                               (float-vector x-coord   y-coord
-                                             1+x-coord y-coord
-                                             1+x-coord 1+y-coord
-                                             x-coord   1+y-coord))
-                         result))))
-      (loop for (vertices uvs) across result
-            collecting (make-vao '2d-texture vertices uvs)))))
+            (let ((vao (make-vao '2d-texture
+                                 (float-vector 0.0           0.0
+                                               (float width) 0.0
+                                               (float width) (float height)
+                                               0.0           (float height))
+                                 (float-vector x-coord   y-coord
+                                               1+x-coord y-coord
+                                               1+x-coord 1+y-coord
+                                               x-coord   1+y-coord))))
+              (setf (aref result i (- n-frames-y j 1)) vao))))))))
 
 (defmethod initialize-instance :after ((instance Texture-atlas) &key image &allow-other-keys)
   (with-slots (n-frames-x n-frames-y frame-size-x frame-size-y textures frame-width frame-height) instance
@@ -258,15 +256,17 @@
           frame-width     (/ (slot-value image 'width) n-frames-x)
           frame-height    (/ (slot-value image 'height) n-frames-y))
     (setf textures (make-array (list n-frames-x n-frames-y)))
-    (loop for i from 0
-          for vao in (make-atlas-vaos instance)
-          doing (setf (row-major-aref textures i) (make-instance 'texture
-                                                                 :mipmap-level 0
-                                                                 :target :texture-2d
-                                                                 :image image
-                                                                 :width frame-width
-                                                                 :height frame-height
-                                                                 :vao vao)))))
+    (let ((gl-texture (make-gl-texture :texture-2d 0 image))
+          (vaos (make-atlas-vaos instance)))
+      (doarray (i j textures)
+        (setf (aref textures i j) (make-instance 'texture
+                                                 :pointer gl-texture
+                                                 :mipmap-level 0
+                                                 :target :texture-2d
+                                                 :image image
+                                                 :width frame-width
+                                                 :height frame-height
+                                                 :vao (aref vaos i j)))))))
 
 (defun get-vao-start (atlas)
   (with-slots (n-frames-x current-frame-x current-frame-y) atlas
