@@ -268,6 +268,9 @@
                                                  :height frame-height
                                                  :vao (aref vaos i j)))))))
 
+(defun get-atlas-frame (atlas x y)
+  (aref (slot-value atlas 'textures) x y))
+
 (defun get-vao-start (atlas)
   (with-slots (n-frames-x current-frame-x current-frame-y) atlas
     (* 4 (+ (* current-frame-y n-frames-x) current-frame-x))))
@@ -391,6 +394,8 @@
 ;;;  Text
 ;;; **************************************************************************
 
+(defvar *text-atlas*)
+
 (defclass Text-atlas (Texture)
   ((font :initarg :font
          :initform "Times")
@@ -453,13 +458,16 @@
 (defun make-text-vao (text atlas)
   (with-slots (char-width char-uv-width height) atlas
     (loop
-      with result = (make-array (* 4 4 (length text))
-                                :element-type 'float
-                                :fill-pointer 0)
+      with vertices = (make-array (* 2 4 (length text))
+                                  :element-type 'single-float
+                                  :fill-pointer 0)
+      with uvs = (make-array (* 2 4 (length text))
+                             :element-type 'single-float
+                             :fill-pointer 0)
       for char across text
       for char-position = (- (char-code char) 32)
       for i from 0
-      finally (return (make-vao result))
+      finally (return (make-vao '2d-texture vertices uvs))
       when (<= 0 char-position 94)
         doing
            (let ((x-coord (float (* char-position char-uv-width)))
@@ -468,31 +476,33 @@
                  (1+y-coord 1.0)
                  (x-vert (float (* i char-width)))
                  (1+x-vert (float (* (1+ i) char-width))))
-             (vector-push* result
-                           x-vert 0.0              x-coord y-coord
-                           1+x-vert 0.0            1+x-coord y-coord
-                           1+x-vert (float height) 1+x-coord 1+y-coord
-                           x-vert (float height)   x-coord 1+y-coord)))))
+             (vector-push* vertices
+                           x-vert   0.0
+                           1+x-vert 0.0
+                           1+x-vert (float height)
+                           x-vert   (float height))
+             (vector-push* uvs
+                           x-coord   y-coord
+                           1+x-coord y-coord
+                           1+x-coord 1+y-coord
+                           x-coord   1+y-coord)))))
 
-(defun update-text-vao (text)
+(defun update-text (text)
   (with-slots (vao atlas content) text
     (setf vao (make-text-vao content atlas))))
 
 (defmethod initialize-instance :after ((instance Text) &rest initargs)
   (declare (ignore initargs))
-  (update-text-vao instance))
+  (update-text instance))
 
 (defmethod (setf text-content) (new-value (instance Text))
   (setf (text-content instance) new-value)
-  (update-text-vao instance)
+  (update-text instance)
   new-value)
 
 (defmethod draw ((text Text))
-  (gl:with-pushed-matrix
-    (apply-transformations text)
-    (with-slots (atlas vao) text
-      (enable-texture :texture-2d atlas)
-      (draw-vao vao :quads 0 (slot-value vao 'length)))))
+  (enable-texture :texture-2d (slot-value text 'atlas))
+  (draw-vao (slot-value text 'vao)))
 
 (defun make-text (content x y
                   &key (scale (list 1.0 1.0)) (rotation (list 0.0 0.0 0.0))
