@@ -204,7 +204,7 @@
       (gl:bind-texture target pointer))))
 
 (defgeneric draw (object)
-  (:method ((texture Texture) )
+  (:method ((texture Texture))
     (with-slots (vao) texture
       (enable-texture :texture-2d texture)
       (draw-vao vao))))
