@@ -18,76 +18,119 @@
 (in-package :isol)
 
 ;;; **************************************************************************
+;;;  Keys
+;;; **************************************************************************
+
+(defun get-char-symbol (char)
+  (make-keyword (string (char-upcase char))))
+
+(defun get-symbol-letter (symbol)
+  (symbol-name symbol))
+
+(defun get-letter-scancode (letter)
+  (sdl2-ffi.functions:sdl-get-scancode-from-name letter))
+
+(defun key-scancode (symbol)
+  (get-letter-scancode (get-symbol-letter symbol)))
+
+;;; **************************************************************************
 ;;;  Keyboard
 ;;; **************************************************************************
 
 ;; ----------------
 ;; Modes
 
-(defvar *keys* (make-hash-table))
+(defclass input-mode ()
+  ((id :initform (error "Input mode must be assigned ID")
+       :initarg :id
+       :reader input-mode-id)
+   (keys :initform (make-instance 'tmap :pred 'fixnum<)
+         :initarg :keys
+         :accessor input-mode-keys))
+  (:documentation "Holds key bindings for specific input mode."))
 
-(defun mode-keys (mode)
-  (gethash mode *keys*))
+(defvar *root-input-mode* (make-instance 'input-mode :id :root))
 
-(defun (setf mode-keys) (new-value mode)
-  (setf (gethash mode *keys*) new-value))
+(defgeneric key-binding (mode key)
+  (:documentation "Returns function binded to given key under given mode."))
 
-(defun key-binding (mode key modifiers)
-  "Returns function binded to given key under given mode."
-  (gethash (list* (code-char key) modifiers) (mode-keys mode)))
+(defgeneric (setf key-binding) (new-value mode key)
+  (:documentation "SETF-function for KEY-BINDING."))
 
-(defun (setf key-binding) (function mode key modifiers)
-  (setf (gethash (list* key modifiers) (mode-keys mode)) function))
+(defgeneric bind-key (mode key function)
+  (:documentation "Binds given character to some function."))
 
-(defun bind-key (mode key modifiers function)
-  "Binds given character to some function."
-  (setf (key-binding mode key modifiers) function))
+(defgeneric handle-key (mode key data)
+  (:documentation "Runs function binded to some `key' with given arguments."))
 
-(defun clear-key-bindings (mode)
-  "Removes all key bindings."
-  (clrhash (mode-keys mode))
-  (remhash mode *keys*)
-  (values))
+(defgeneric copy-input-mode (class mode)
+  (:documentation "Copies given input mode producing new instance of given class."))
 
-(defun handle-key (key modifiers &rest arguments)
-  "Runs function binded to some `key' with given arguments."
-  (awhen (key-binding (context-var :input-mode :normal)
-                      (etypecase key
-                        (integer key)
-                        (character (char-code key))
-                        (symbol key))
-                      modifiers)
-    (apply it arguments)))
+;; ----------------
+;; Methods
+
+(defmethod key-binding ((mode input-mode) (key fixnum))
+  (get-gmap (input-mode-keys mode) key))
+
+(defmethod key-binding ((mode input-mode) (key character))
+  (key-binding mode (get-letter-scancode (string key))))
+
+(defmethod key-binding ((mode input-mode) (key symbol))
+  (key-binding mode (key-scancode key)))
+
+(defmethod (setf key-binding) (new-value (mode input-mode) (key fixnum))
+  (set-gmap (input-mode-keys mode) key new-value))
+
+(defmethod (setf key-binding) (new-value (mode input-mode) (key character))
+  (setf (key-binding mode (get-letter-scancode (string key))) new-value))
+
+(defmethod (setf key-binding) (new-value (mode input-mode) (key symbol))
+  (setf (key-binding mode (key-scancode key)) new-value))
+
+(defmethod bind-key ((mode input-mode) (key fixnum) function)
+  (setf (key-binding mode key) function))
+
+(defmethod bind-key ((mode input-mode) (key character) function)
+  (setf (key-binding mode (get-letter-scancode (string key))) function))
+
+(defmethod bind-key ((mode input-mode) (key symbol) function)
+  (setf (key-binding mode (key-scancode key)) function))
+
+(defmethod copy-input-mode (class (mode input-mode))
+  (with-slots (keys id) mode
+    (make-instance class :id id
+                         :keys (copy-gmap keys))))
+
+(defmethod handle-key ((mode input-mode) (key fixnum) data)
+  (when-let (key (key-binding mode key))
+    (funcall key data)))
+
+(defmethod handle-key ((mode input-mode) (key symbol) data)
+  (handle-key mode (key-scancode key) data))
+
+(defmethod handle-key ((mode input-mode) (key character) data)
+  (handle-key mode (get-char-symbol key) data))
 
 ;; ----------------
 ;; Macros
 
-(defmacro with-input-mode (mode-name &body body)
+(defmacro with-input-mode (mode &body body)
   "Executes `body' with specific input mode enabled."
   (with-gensyms (context-gensym)
-    `(let ((,context-gensym (copy-context *context* :input-mode ,mode-name)))
+    `(let ((,context-gensym (copy-context *context* :input-mode ,mode)))
        (with-context (,context-gensym)
          ,@body))))
 
-(defmacro define-input-mode (name &body bindings)
-  "Adds new input mode and binds keys for it."
-  `(progn
-     (setf (mode-keys ,name) (make-hash-table :test 'equal))
-     ,@(iter
-         (for (key modifiers function) in bindings)
-         (collecting
-           (bind-key name key modifiers function)))))
+(defun make-input-mode (parent &optional class)
+  (copy-input-mode (or class (class-of parent)) parent))
 
-(defmacro define-key-binding (mode key modifiers function)
-  `(bind-key ,mode ,key ',modifiers ',function))
+(defun extend-input-mode (mode new-bindings)
+  (loop for (key binding) in new-bindings
+        doing (bind-key mode key binding))
+  mode)
 
-(defmacro define-key-handler (name (mode key modifiers) &body body)
-  (let ((name (symbol-append 'key/ name)))
-    `(progn
-       (defun ,name (game)
-         (declare (ignorable game))
-         ,@body)
-       (define-key-binding ,mode ,key ,modifiers ,name))))
+(defmacro input-mode ((&optional (parent-mode '*root-input-mode*) class) &body bindings)
+  `(extend-input-mode (make-input-mode ,parent-mode ,class) ',bindings))
 
 ;; ----------------
 ;; SDL macros
