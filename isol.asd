@@ -29,7 +29,8 @@
                :alexandria
                :iterate
                :anaphora
-               :let-plus)
+               :let-plus
+               :hive-task)
   :in-order-to ((test-op (load-op :isol/tests)))
   :perform (test-op (op component)
              (asdf/package:symbol-call :fiveam :run! :isol.tests))
