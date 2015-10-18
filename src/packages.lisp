@@ -21,4 +21,20 @@
         :iterate
         :anaphora
         :let-plus)
+  (:import-from #:stmx.util
+                #:tmap
+                #:fixnum<
+                #:gmap-pred
+                #:gmap-count
+                #:gmap-empty?
+                #:clear-gmap
+                #:get-gmap
+                #:set-gmap
+                #:rem-gmap
+                #:map-gmap
+                #:do-gmap
+                #:gmap-keys
+                #:gmap-values
+                #:gmap-pairs
+   )
   (:export :main))
