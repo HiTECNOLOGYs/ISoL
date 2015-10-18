@@ -299,7 +299,7 @@
 
 (defclass Animated-texture (Texture-atlas)
   ((frame-rate :initarg :frame-rate)
-   (counter :initform 0)
+   (dt :initarg :dt :initform 1000)
    (sequence :initarg :sequence)
    (current-frame :initform 0)))
 
@@ -310,6 +310,7 @@
                  :n-frames-y size-y
                  :sequence sequence
                  :frame-rate frame-rate
+                 :dt (/ 1 frame-rate)
                  :image image
                  :target target
                  :mipmap-level mipmap-level
@@ -326,11 +327,9 @@
 
 (defgeneric animation-tick (texture)
   (:method ((texture Animated-texture))
-    (with-slots (frame-rate counter) texture
-      (incf counter)
-      (when (>= counter frame-rate)
-        (setf counter 0)
-        (next-frame texture)))))
+    (with-slots (dt) texture
+      (sleep dt)
+      (next-frame texture))))
 
 ;;; **************************************************************************
 ;;;  Transformations
