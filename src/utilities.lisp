@@ -100,3 +100,12 @@ Binds `x-var' to current x position and `y-var' to current y position."
 (defun vector-push* (array &rest new-elements)
   (dolist (elt new-elements array)
     (vector-push elt array)))
+
+(defun copy-gmap (gmap)
+  (let ((new-gmap (make-instance (class-of gmap)
+                                 :pred (gmap-pred gmap))))
+    (map-gmap gmap
+              #'(lambda (key value index)
+                  (declare (ignore index))
+                  (set-gmap new-gmap key value)))
+    new-gmap))
